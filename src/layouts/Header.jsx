@@ -3,6 +3,7 @@ import { FiBell } from "react-icons/fi";
 import { FiChevronDown } from "react-icons/fi";
 import Profile from "../assets/profile/profiel.png";
 import logo from "/logo.png"; // Adjust path if needed
+import { Link } from "react-router-dom";
 
 function Header() {
     const [showPopup, setShowPopup] = useState(false);
@@ -14,11 +15,13 @@ function Header() {
             {/* Logo + Travelers */}
             <div className="flex items-center gap-6">
                 <div className="flex items-center gap-3">
-                    <img
-                        src={logo}
-                        alt="Logo"
-                        className="h-10 w-auto object-contain"
-                    />
+                    <Link to={"/"} >
+                        <img
+                            src={logo}
+                            alt="Logo"
+                            className="h-10 w-auto object-contain"
+                        />
+                    </Link>
                 </div>
 
                 <div className="h-8 w-[1px] bg-white opacity-30"></div>
