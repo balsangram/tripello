@@ -11,6 +11,7 @@ import RoomDetail from '../pages/RoomDetail';
 import ConfirmBooking from '../pages/ComfirmBooking';
 import MyBooking from '../pages/MyBooking';
 import ChatWithUs from '../pages/ChartWithUs';
+import Profile from '../pages/Profile';
 
 function AppRouter() {
     return (
@@ -24,7 +25,9 @@ function AppRouter() {
                     <Route path="/myBooking" element={<MyBooking />} />
                     <Route path="/chatWithUs" element={<ChatWithUs />} />
                     <Route path="/login" element={<Login />} />
-                    <Route path="/Signup" element={<Register />} />
+                    <Route path="/signup" element={<Register />} />
+                    <Route path="/profile" element={<Profile />} />
+
                 </Route>
             </Routes>
         </BrowserRouter>
