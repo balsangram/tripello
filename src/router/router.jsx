@@ -7,6 +7,9 @@ import Login from '../pages/auth/Login';
 import Register from '../pages/auth/Register';
 import Index from '../pages/Index';
 import Search from "../pages/SearchPage";
+import RoomDetail from '../pages/RoomDetail';
+import ConfirmBooking from '../pages/ComfirmBooking';
+import MyBooking from '../pages/MyBooking';
 
 function AppRouter() {
     return (
@@ -15,6 +18,9 @@ function AppRouter() {
                 <Route element={<Layout />}>
                     <Route path="/" element={<Index />} />
                     <Route path="/search" element={<Search />} />
+                    <Route path="/rooms" element={<RoomDetail />} />
+                    <Route path="/ConfirmBooking" element={<ConfirmBooking />} />
+                    <Route path="/MyBooking" element={<MyBooking />} />
                     <Route path="/login" element={<Login />} />
                     <Route path="/Signup" element={<Register />} />
                 </Route>
