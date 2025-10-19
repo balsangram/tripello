@@ -6,6 +6,7 @@ import Layout from '../layouts/Layout';      // adjust path if needed
 import Login from '../pages/auth/Login';
 import Register from '../pages/auth/Register';
 import Index from '../pages/Index';
+import Search from "../pages/SearchPage";
 
 function AppRouter() {
     return (
@@ -13,6 +14,7 @@ function AppRouter() {
             <Routes>
                 <Route element={<Layout />}>
                     <Route path="/" element={<Index />} />
+                    <Route path="/search" element={<Search />} />
                     <Route path="/login" element={<Login />} />
                     <Route path="/Signup" element={<Register />} />
                 </Route>
