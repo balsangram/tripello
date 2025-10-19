@@ -10,6 +10,7 @@ import Search from "../pages/SearchPage";
 import RoomDetail from '../pages/RoomDetail';
 import ConfirmBooking from '../pages/ComfirmBooking';
 import MyBooking from '../pages/MyBooking';
+import ChatWithUs from '../pages/ChartWithUs';
 
 function AppRouter() {
     return (
@@ -18,9 +19,10 @@ function AppRouter() {
                 <Route element={<Layout />}>
                     <Route path="/" element={<Index />} />
                     <Route path="/search" element={<Search />} />
-                    <Route path="/rooms" element={<RoomDetail />} />
-                    <Route path="/ConfirmBooking" element={<ConfirmBooking />} />
-                    <Route path="/MyBooking" element={<MyBooking />} />
+                    <Route path="/roomsDetails" element={<RoomDetail />} />
+                    <Route path="/confirmBooking" element={<ConfirmBooking />} />
+                    <Route path="/myBooking" element={<MyBooking />} />
+                    <Route path="/chatWithUs" element={<ChatWithUs />} />
                     <Route path="/login" element={<Login />} />
                     <Route path="/Signup" element={<Register />} />
                 </Route>

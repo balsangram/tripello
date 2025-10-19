@@ -39,6 +39,8 @@ function SearchPage() {
     const [sortBy, setSortBy] = useState("recommended");
     const [priceRange, setPriceRange] = useState([1000, 15000]);
     const [selectedAmenities, setSelectedAmenities] = useState([]);
+    const [showModal, setShowModal] = useState(false);
+    const [selectedProperty, setSelectedProperty] = useState(null);
 
     const tabs = [
         { id: "stays", label: "🏠 Stays", icon: "🏠" },
@@ -80,7 +82,11 @@ function SearchPage() {
             originalPrice: 15000,
             rating: 4.8,
             reviews: 892,
-            image: "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=400&h=300&fit=crop",
+            images: [
+                "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800&h=600&fit=crop",
+                "https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?w=800&h=600&fit=crop",
+                "https://images.unsplash.com/photo-1578683015141-738c7604b2fd?w=800&h=600&fit=crop"
+            ],
             amenities: ["wifi", "pool", "spa", "restaurant", "ac", "gym"],
             type: "resort",
             discount: 17,
@@ -95,7 +101,11 @@ function SearchPage() {
             originalPrice: 7500,
             rating: 4.6,
             reviews: 456,
-            image: "https://images.unsplash.com/photo-1582719508461-905c673771fd?w=400&h=300&fit=crop",
+            images: [
+                "https://images.unsplash.com/photo-1582719508461-905c673771fd?w=800&h=600&fit=crop",
+                "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=800&h=600&fit=crop",
+                "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&h=600&fit=crop"
+            ],
             amenities: ["wifi", "parking", "ac"],
             type: "cottage",
             discount: 9,
@@ -110,7 +120,11 @@ function SearchPage() {
             originalPrice: 4200,
             rating: 4.3,
             reviews: 1234,
-            image: "https://images.unsplash.com/photo-1555854877-bab0e564b8d5?w=400&h=300&fit=crop",
+            images: [
+                "https://images.unsplash.com/photo-1555854877-bab0e564b8d5?w=800&h=600&fit=crop",
+                "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800&h=600&fit=crop",
+                "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800&h=600&fit=crop"
+            ],
             amenities: ["wifi", "gym", "restaurant", "ac", "parking"],
             type: "hotel",
             discount: 0,
@@ -125,7 +139,11 @@ function SearchPage() {
             originalPrice: 22000,
             rating: 4.9,
             reviews: 287,
-            image: "https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?w=400&h=300&fit=crop",
+            images: [
+                "https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?w=800&h=600&fit=crop",
+                "https://images.unsplash.com/photo-1571003119718-97518273d7c0?w=800&h=600&fit=crop",
+                "https://images.unsplash.com/photo-1564507592333-cdd2ae446de7?w=800&h=600&fit=crop"
+            ],
             amenities: ["wifi", "pool", "spa", "restaurant", "parking"],
             type: "heritage",
             discount: 14,
@@ -140,7 +158,11 @@ function SearchPage() {
             originalPrice: 3800,
             rating: 4.7,
             reviews: 634,
-            image: "https://images.unsplash.com/photo-1571896349842-33c89424de2d?w=400&h=300&fit=crop",
+            images: [
+                "https://images.unsplash.com/photo-1571896349842-33c89424de2d?w=800&h=600&fit=crop",
+                "https://images.unsplash.com/photo-1551524161-1205e895bace?w=800&h=600&fit=crop",
+                "https://images.unsplash.com/photo-1578683015141-738c7604b2fd?w=800&h=600&fit=crop"
+            ],
             amenities: ["wifi", "parking"],
             type: "eco",
             discount: 16,
@@ -155,7 +177,11 @@ function SearchPage() {
             originalPrice: 25000,
             rating: 4.8,
             reviews: 189,
-            image: "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=400&h=300&fit=crop",
+            images: [
+                "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=800&h=600&fit=crop",
+                "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&h=600&fit=crop",
+                "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&h=600&fit=crop"
+            ],
             amenities: ["wifi", "pool", "gym", "ac", "parking"],
             type: "penthouse",
             discount: 14,
@@ -182,6 +208,15 @@ function SearchPage() {
         setSelectedAmenities([]);
         setPriceRange([1000, 15000]);
         setSortBy("recommended");
+    };
+
+    const handleViewClick = (property) => {
+        setSelectedProperty(property);
+        setShowModal(true);
+    };
+
+    const handleBookNowClick = (property) => {
+        window.location.href = `http://localhost:5174/roomsDetails?id=${property.id}`;
     };
 
     const filteredResults = searchResults.filter(result => {
@@ -223,8 +258,8 @@ function SearchPage() {
                                 key={tab.id}
                                 onClick={() => setActiveTab(tab.id)}
                                 className={`flex items-center gap-2 px-6 py-4 font-medium whitespace-nowrap transition-all duration-300 border-b-2 ${activeTab === tab.id
-                                        ? "border-blue-600 text-blue-600 bg-blue-50"
-                                        : "border-transparent text-gray-500 hover:text-gray-700"
+                                    ? "border-blue-600 text-blue-600 bg-blue-50"
+                                    : "border-transparent text-gray-500 hover:text-gray-700"
                                     }`}
                             >
                                 <span className="text-lg">{tab.icon}</span>
@@ -410,8 +445,8 @@ function SearchPage() {
                                         <button
                                             onClick={() => setViewMode("grid")}
                                             className={`p-2 rounded-lg transition-all ${viewMode === "grid"
-                                                    ? "bg-white text-blue-600 shadow-sm"
-                                                    : "text-gray-500 hover:text-gray-700"
+                                                ? "bg-white text-blue-600 shadow-sm"
+                                                : "text-gray-500 hover:text-gray-700"
                                                 }`}
                                         >
                                             <FiGrid className="w-4 h-4" />
@@ -419,8 +454,8 @@ function SearchPage() {
                                         <button
                                             onClick={() => setViewMode("list")}
                                             className={`p-2 rounded-lg transition-all ${viewMode === "list"
-                                                    ? "bg-white text-blue-600 shadow-sm"
-                                                    : "text-gray-500 hover:text-gray-700"
+                                                ? "bg-white text-blue-600 shadow-sm"
+                                                : "text-gray-500 hover:text-gray-700"
                                                 }`}
                                         >
                                             <FiList className="w-4 h-4" />
@@ -470,7 +505,7 @@ function SearchPage() {
                                         {/* Image Section */}
                                         <div className="md:w-2/5 relative">
                                             <img
-                                                src={property.image}
+                                                src={property.images[0]}
                                                 alt={property.title}
                                                 className="w-full h-48 md:h-full object-cover group-hover:scale-105 transition-transform duration-500"
                                             />
@@ -556,10 +591,16 @@ function SearchPage() {
 
                                             {/* Action Buttons */}
                                             <div className="flex gap-3">
-                                                <button className="flex-1 bg-blue-600 text-white py-3 rounded-xl font-semibold hover:bg-blue-700 transform hover:scale-105 transition-all duration-300">
+                                                <button
+                                                    onClick={() => handleBookNowClick(property)}
+                                                    className="flex-1 bg-blue-600 text-white py-3 rounded-xl font-semibold hover:bg-blue-700 transform hover:scale-105 transition-all duration-300"
+                                                >
                                                     Book Now
                                                 </button>
-                                                <button className="px-6 border border-gray-300 rounded-xl hover:bg-gray-50 transition-colors flex items-center gap-2 text-gray-700">
+                                                <button
+                                                    onClick={() => handleViewClick(property)}
+                                                    className="px-6 border border-gray-300 rounded-xl hover:bg-gray-50 transition-colors flex items-center gap-2 text-gray-700"
+                                                >
                                                     <FiEye className="w-4 h-4" />
                                                     View
                                                 </button>
@@ -589,6 +630,33 @@ function SearchPage() {
                     </div>
                 </div>
             </div>
+
+            {/* Image Modal */}
+            {showModal && selectedProperty && (
+                <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded-2xl max-w-4xl w-full max-h-screen overflow-y-auto">
+                        <div className="p-6">
+                            <div className="flex justify-between items-center mb-4">
+                                <h3 className="text-xl font-bold text-gray-900">{selectedProperty.title}</h3>
+                                <button onClick={() => setShowModal(false)} className="text-gray-500 hover:text-gray-700">
+                                    <FiX className="w-6 h-6" />
+                                </button>
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                                {selectedProperty.images.map((image, index) => (
+                                    <img
+                                        key={index}
+                                        src={image}
+                                        alt={`${selectedProperty.title} - Room ${index + 1}`}
+                                        className="w-full h-64 object-cover rounded-lg"
+                                    />
+                                ))}
+                            </div>
+                            <p className="text-gray-600 text-sm">{selectedProperty.description}</p>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Custom Styles */}
             <style jsx>{`

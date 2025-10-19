@@ -282,7 +282,7 @@ function Explore() {
         </div>
 
         {/* Scroll Indicator */}
-        <div className="flex justify-center items-center gap-4 mt-8">
+        {/* <div className="flex justify-center items-center gap-4 mt-8">
           <div className="flex-1 h-1 bg-gray-200 rounded-full overflow-hidden">
             <div
               className="h-full bg-gradient-to-r from-blue-500 to-purple-500 transition-all duration-300"
@@ -294,7 +294,7 @@ function Explore() {
           <span className="text-sm text-gray-500 font-medium min-w-[100px] text-center">
             {data.length} stay types
           </span>
-        </div>
+        </div> */}
 
         {/* CTA Section */}
         {/* <div className="text-center mt-12">

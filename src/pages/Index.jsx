@@ -9,16 +9,16 @@ import Suggestion from '../componate/home/Suggestion'
 
 function Index() {
   return (
-    <div>
-      <Hero/>
-      <Featured/>
-      <Recommended/>
-      <Work/>
-      
-      <Suggestion/>
+    <div className='mt-8'>
+      <Hero />
+      <Featured />
+      <Recommended />
+      <Work />
 
-      <Explore/>
-      <Feedback/>
+      <Suggestion />
+
+      <Explore />
+      <Feedback />
     </div>
   )
 }

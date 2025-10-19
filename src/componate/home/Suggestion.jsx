@@ -210,7 +210,7 @@ function Suggestion() {
         </div>
 
         {/* Progress Bar */}
-        <div className="max-w-md mx-auto mt-8 px-6">
+        {/* <div className="max-w-md mx-auto mt-8 px-6">
           <div className="h-1 bg-gray-200 rounded-full overflow-hidden">
             <div
               className="h-full bg-gradient-to-r from-blue-500 to-purple-500 transition-all duration-1000 ease-out"
@@ -219,14 +219,14 @@ function Suggestion() {
               }}
             ></div>
           </div>
-        </div>
+        </div> */}
 
         {/* CTA Button */}
-        <div className="text-center mt-12 px-6">
+        {/* <div className="text-center mt-12 px-6">
           <button className="bg-gradient-to-r from-blue-500 to-purple-500 text-white px-10 py-4 rounded-2xl font-semibold text-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 hover:from-blue-600 hover:to-purple-600 active:scale-95">
             Explore All Destinations
           </button>
-        </div>
+        </div> */}
       </div>
     </div>
   );

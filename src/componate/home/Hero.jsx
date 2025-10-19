@@ -115,11 +115,12 @@ function Hero() {
             </div>
           </div>
 
-          <h1 className="text-5xl lg:text-7xl font-bold text-white leading-tight">
+          <h1 className="text-5xl lg:text-7xl font-bold text-white leading-tight relative">
             Start Your Journey with{" "}
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-purple-400 animate-gradient">
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-400 inline-block">
               Tripeloo
             </span>
+            <span className="absolute -bottom-2 left-0 w-full h-1 bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-400 rounded-full opacity-60 blur-sm"></span>
           </h1>
 
           <p className="text-xl text-white/90 leading-relaxed max-w-lg backdrop-blur-sm bg-white/10 rounded-2xl p-4 border border-white/20">
@@ -406,7 +407,7 @@ function Hero() {
       </div>
 
       {/* CSS for animations */}
-      <style jsx>{`
+      <style>{`
         @keyframes float {
           0%, 100% { transform: translateY(0px) rotate(0deg); }
           50% { transform: translateY(-20px) rotate(180deg); }
@@ -419,11 +420,6 @@ function Hero() {
           0%, 100% { transform: translateY(0px); }
           50% { transform: translateY(-10px); }
         }
-        @keyframes gradient {
-          0% { background-position: 0% 50%; }
-          50% { background-position: 100% 50%; }
-          100% { background-position: 0% 50%; }
-        }
         .animate-float {
           animation: float 6s ease-in-out infinite;
         }
@@ -432,11 +428,6 @@ function Hero() {
         }
         .animate-float-slow {
           animation: float-slow 10s ease-in-out infinite;
-        }
-        .animate-gradient {
-          background: linear-gradient(-45deg, #22d3ee, #3b82f6, #8b5cf6, #ec4899);
-          background-size: 400% 400%;
-          animation: gradient 3s ease infinite;
         }
       `}</style>
     </section>
