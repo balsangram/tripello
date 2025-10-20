@@ -262,7 +262,7 @@ function RoomDetail() {
     };
 
     const handleReserve = () => {
-        window.location.href = 'http://localhost:5174/ConfirmBooking';
+        window.location.href = 'ConfirmBooking';
     };
 
     if (!roomData) {

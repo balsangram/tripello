@@ -12,6 +12,7 @@ import ConfirmBooking from '../pages/ComfirmBooking';
 import MyBooking from '../pages/MyBooking';
 import ChatWithUs from '../pages/ChartWithUs';
 import Profile from '../pages/Profile';
+import Social from '../pages/Social';
 
 function AppRouter() {
     return (
@@ -27,6 +28,7 @@ function AppRouter() {
                     <Route path="/login" element={<Login />} />
                     <Route path="/signup" element={<Register />} />
                     <Route path="/profile" element={<Profile />} />
+                    <Route path="/social" element={<Social />} />
 
                 </Route>
             </Routes>

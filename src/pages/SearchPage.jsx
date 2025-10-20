@@ -216,7 +216,7 @@ function SearchPage() {
     };
 
     const handleBookNowClick = (property) => {
-        window.location.href = `http://localhost:5174/roomsDetails?id=${property.id}`;
+        window.location.href = `roomsDetails?id=${property.id}`;
     };
 
     const filteredResults = searchResults.filter(result => {
