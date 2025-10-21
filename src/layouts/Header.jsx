@@ -182,8 +182,8 @@ function Header() {
 
     return (
         <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${isScrolled
-                ? 'bg-white/95 backdrop-blur-xl shadow-2xl border-b border-gray-100'
-                : 'bg-gradient-to-r from-[#cf1f46] to-[#e84d6d] shadow-lg'
+            ? 'bg-white/95 backdrop-blur-xl shadow-2xl border-b border-gray-100'
+            : 'bg-gradient-to-r from-[#cf1f46] to-[#e84d6d] shadow-lg'
             }`}>
             <div className="max-w-7xl mx-auto px-6 py-3">
                 <div className="flex items-center justify-between">
@@ -214,8 +214,8 @@ function Header() {
                             <button
                                 onClick={toggleTravelersMenu}
                                 className={`flex items-center gap-2 font-medium transition-all duration-300 group ${isScrolled
-                                        ? 'text-gray-700 hover:text-[#cf1f46]'
-                                        : 'text-white hover:text-white/90'
+                                    ? 'text-gray-700 hover:text-[#cf1f46]'
+                                    : 'text-white hover:text-white/90'
                                     }`}
                             >
                                 <MdTravelExplore className="text-lg opacity-80 group-hover:scale-110 transition-transform" />
@@ -272,8 +272,8 @@ function Header() {
                             <button
                                 onClick={toggleNotifications}
                                 className={`relative p-2 rounded-xl transition-all duration-300 group ${isScrolled
-                                        ? 'text-gray-600 hover:text-[#cf1f46] hover:bg-gray-100'
-                                        : 'text-white hover:bg-white/20'
+                                    ? 'text-gray-600 hover:text-[#cf1f46] hover:bg-gray-100'
+                                    : 'text-white hover:bg-white/20'
                                     } ${showNotifications ? (isScrolled ? 'bg-gray-100 text-[#cf1f46]' : 'bg-white/30') : ''}`}
                                 aria-label="Notifications"
                             >
@@ -303,8 +303,8 @@ function Header() {
                                                 key={notification.id}
                                                 onClick={() => handleNotificationClick(notification.id)}
                                                 className={`p-3 rounded-xl cursor-pointer transition-all duration-200 group ${notification.read
-                                                        ? 'bg-gray-50 hover:bg-gray-100'
-                                                        : 'bg-blue-50 hover:bg-blue-100 border-l-4 border-blue-500'
+                                                    ? 'bg-gray-50 hover:bg-gray-100'
+                                                    : 'bg-blue-50 hover:bg-blue-100 border-l-4 border-blue-500'
                                                     }`}
                                             >
                                                 <div className="flex items-start gap-3">
