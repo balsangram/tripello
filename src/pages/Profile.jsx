@@ -1,17 +1,38 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { apiHandler } from '../utils/api'; // Adjust path if needed
 
 function Profile() {
   const [isEditing, setIsEditing] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState({
-    name: "sipu",
-    username: "sipu",
-    email: "user@gmail.com",
-    gender: "Other",
-    dob: "dd/mm/yyyy",
-    phone: "",
-    address: "user@example.com",
-    about: ""
+    name: '',
+    username: '',
+    email: '',
+    gender: '',
+    dob: '',
+    phone: '',
+    address: '',
+    about: ''
   });
+
+  // Fetch profile on mount
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const res = await apiHandler({
+          url: '/users/me',
+          method: 'GET'
+        });
+        setProfile(res.data);
+      } catch (error) {
+        alert(error?.message || 'Failed to fetch profile');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProfile();
+  }, []);
 
   const handleEditToggle = () => {
     setIsEditing(!isEditing);
@@ -19,21 +40,33 @@ function Profile() {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setProfile(prevProfile => ({
-      ...prevProfile,
-      [name]: value
-    }));
+    setProfile(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setIsEditing(false);
+    try {
+      await apiHandler({
+        url: '/users/me',
+        method: 'PUT',
+        data: profile
+      });
+      alert('Profile updated successfully!');
+    } catch (error) {
+      alert(error?.message || 'Failed to update profile');
+    }
   };
+
+  if (loading) {
+    return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
+  }
 
   return (
     <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
       <div className="bg-white rounded-lg shadow-lg p-6 max-w-md w-full">
         <h1 className="text-2xl font-bold text-center mb-6 text-gray-800">Account Information</h1>
+
         <div className="flex justify-center mb-4 relative">
           <div className="w-24 h-24 rounded-full bg-gray-300 flex items-center justify-center border-2 border-gray-300">
             <span className="text-gray-500 text-sm">Profile</span>
@@ -42,6 +75,7 @@ function Profile() {
             +
           </button>
         </div>
+
         {isEditing ? (
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
