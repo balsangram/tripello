@@ -1,10 +1,9 @@
-import React, { useEffect, useState } from "react";
-import { Outlet } from "react-router-dom";
+import React, { createContext, useState, useEffect } from "react";
 import Cookies from "js-cookie";
-import Header from "./Header";
-import Footer from "./Footer";
 
-const Layout = () => {
+export const AuthContext = createContext();
+
+export const AuthProvider = ({ children }) => {
     const [isLoggedIn, setIsLoggedIn] = useState(false);
     const [user, setUser] = useState(null);
 
@@ -12,6 +11,7 @@ const Layout = () => {
         const accessTokenUser = Cookies.get("accessToken_user");
         const accessTokenProvider = Cookies.get("accessToken_travelProvider");
         const loggedIn = !!accessTokenUser || !!accessTokenProvider;
+
         setIsLoggedIn(loggedIn);
 
         if (loggedIn) {
@@ -20,7 +20,7 @@ const Layout = () => {
         }
     }, []);
 
-    const handleLogout = () => {
+    const logout = () => {
         Cookies.remove("accessToken_user");
         Cookies.remove("refreshToken_user");
         Cookies.remove("accessToken_travelProvider");
@@ -32,15 +32,8 @@ const Layout = () => {
     };
 
     return (
-        <>
-            <Header isLoggedIn={isLoggedIn} user={user} onLogout={handleLogout} />
-            <main>
-                {/* 👇 This renders the current page */}
-                <Outlet />
-            </main>
-            <Footer />
-        </>
+        <AuthContext.Provider value={{ isLoggedIn, user, logout }}>
+            {children}
+        </AuthContext.Provider>
     );
 };
-
-export default Layout;

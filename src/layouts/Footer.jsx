@@ -65,7 +65,15 @@ function Footer() {
                                     className="w-32 filter brightness-0 invert"
                                 />
                             </div>
-                            <p className="text-white/80 text-sm leading-relaxed mb-3 line-clamp-2">
+                            <p
+                                className="text-white/80 text-sm leading-relaxed mb-3"
+                                style={{
+                                    display: '-webkit-box',
+                                    WebkitLineClamp: 2,
+                                    WebkitBoxOrient: 'vertical',
+                                    overflow: 'hidden'
+                                }}
+                            >
                                 Your trusted travel companion for unforgettable experiences worldwide.
                             </p>
                         </div>
@@ -175,16 +183,6 @@ function Footer() {
                     </div>
                 </div>
             </div>
-
-            {/* CSS for line clamp */}
-            <style jsx>{`
-                .line-clamp-2 {
-                    display: -webkit-box;
-                    -webkit-line-clamp: 2;
-                    -webkit-box-orient: vertical;
-                    overflow: hidden;
-                }
-            `}</style>
         </footer>
     );
 }

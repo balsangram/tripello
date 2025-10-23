@@ -4,9 +4,11 @@ import { apiHandler } from "../../utils/api"; // ✅ adjust path if needed
 
 function Register() {
   const [formData, setFormData] = useState({
-    name: "",
+    fullName: "",
     username: "",
     email: "",
+    gender: "Other",
+    phoneNumber: "",
     password: "",
     confirmPassword: "",
   });
@@ -34,11 +36,13 @@ function Register() {
         url: "/users/register",
         method: "POST",
         data: {
-          name: formData.name,
+          fullName: formData.fullName,
           username: formData.username,
           email: formData.email,
           password: formData.password,
           type: "user", // 👈 always send this field
+          gender: formData.gender,
+          phoneNumber: formData.phoneNumber,
         },
         requireAuth: false,
       });
@@ -60,14 +64,14 @@ function Register() {
         </h2>
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Name */}
+          {/* Full Name */}
           <div>
-            <label className="block text-gray-700 mb-2">Name</label>
+            <label className="block text-gray-700 mb-2">Full Name</label>
             <input
               type="text"
-              name="name"
-              placeholder="Your Name"
-              value={formData.name}
+              name="fullName"
+              placeholder="Your Full Name"
+              value={formData.fullName}
               onChange={handleChange}
               className="w-full border border-gray-300 rounded-full px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[#CF1F46]"
               required
@@ -96,6 +100,36 @@ function Register() {
               name="email"
               placeholder="example@example.com"
               value={formData.email}
+              onChange={handleChange}
+              className="w-full border border-gray-300 rounded-full px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[#CF1F46]"
+              required
+            />
+          </div>
+
+          {/* Gender */}
+          <div>
+            <label className="block text-gray-700 mb-2">Gender</label>
+            <select
+              name="gender"
+              value={formData.gender}
+              onChange={handleChange}
+              className="w-full border border-gray-300 rounded-full px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[#CF1F46]"
+              required
+            >
+              <option value="Other">Other</option>
+              <option value="Male">Male</option>
+              <option value="Female">Female</option>
+            </select>
+          </div>
+
+          {/* Phone Number */}
+          <div>
+            <label className="block text-gray-700 mb-2">Phone Number</label>
+            <input
+              type="tel"
+              name="phoneNumber"
+              placeholder="Your Phone Number"
+              value={formData.phoneNumber}
               onChange={handleChange}
               className="w-full border border-gray-300 rounded-full px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[#CF1F46]"
               required
