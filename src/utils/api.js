@@ -1,6 +1,7 @@
 import axios from "axios";
 
-const BASE_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:5002/api/v1";
+const BASE_URL = import.meta.env.VITE_APP_API_URL;
+// console.log("🚀 ~ BASE_URL:", BASE_URL);
 
 // ✅ Axios instance that always includes cookies
 const api = axios.create({
