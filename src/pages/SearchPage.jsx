@@ -43,7 +43,7 @@ function SearchPage() {
     const [selectedAmenities, setSelectedAmenities] = useState([]);
     const [showModal, setShowModal] = useState(false);
     const [selectedProperty, setSelectedProperty] = useState(null);
-    
+
     // Pagination state
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage] = useState(6);
@@ -344,7 +344,7 @@ function SearchPage() {
     };
 
     const handleBookNowClick = (property) => {
-        window.location.href = `roomsDetails?id=${property.id}`;
+        window.location.href = `room-detail?id=${property.id}`;
     };
 
     // Filter and sort results
@@ -390,18 +390,18 @@ function SearchPage() {
     const getPageNumbers = () => {
         const pages = [];
         const maxVisiblePages = 5;
-        
+
         let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
         let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
-        
+
         if (endPage - startPage + 1 < maxVisiblePages) {
             startPage = Math.max(1, endPage - maxVisiblePages + 1);
         }
-        
+
         for (let i = startPage; i <= endPage; i++) {
             pages.push(i);
         }
-        
+
         return pages;
     };
 
@@ -749,8 +749,8 @@ function SearchPage() {
                                                 {property.amenities.slice(0, 3).map((amenity, index) => {
                                                     const amenityConfig = amenities.find(a => a.id === amenity);
                                                     return amenityConfig ? (
-                                                        <div 
-                                                            key={index} 
+                                                        <div
+                                                            key={index}
                                                             className="flex items-center gap-1 text-gray-500 hover:text-blue-600 transition-colors group/amenity"
                                                             title={amenityConfig.label}
                                                         >
@@ -793,17 +793,16 @@ function SearchPage() {
                                 <div className="text-sm text-gray-600">
                                     Showing {indexOfFirstItem + 1}-{Math.min(indexOfLastItem, sortedResults.length)} of {sortedResults.length} properties
                                 </div>
-                                
+
                                 <div className="flex items-center gap-1">
                                     {/* Previous Button */}
                                     <button
                                         onClick={prevPage}
                                         disabled={currentPage === 1}
-                                        className={`p-2 rounded-lg border transition-all duration-200 ${
-                                            currentPage === 1
+                                        className={`p-2 rounded-lg border transition-all duration-200 ${currentPage === 1
                                                 ? 'text-gray-400 border-gray-200 cursor-not-allowed'
                                                 : 'text-gray-600 border-gray-300 hover:bg-gray-50 hover:border-gray-400'
-                                        }`}
+                                            }`}
                                     >
                                         <FiChevronLeft className="w-4 h-4" />
                                     </button>
@@ -813,11 +812,10 @@ function SearchPage() {
                                         <button
                                             key={page}
                                             onClick={() => paginate(page)}
-                                            className={`min-w-[32px] h-8 rounded-lg border text-sm font-medium transition-all duration-200 ${
-                                                currentPage === page
+                                            className={`min-w-[32px] h-8 rounded-lg border text-sm font-medium transition-all duration-200 ${currentPage === page
                                                     ? 'bg-blue-600 text-white border-blue-600'
                                                     : 'text-gray-600 border-gray-300 hover:bg-gray-50 hover:border-gray-400'
-                                            }`}
+                                                }`}
                                         >
                                             {page}
                                         </button>
@@ -827,11 +825,10 @@ function SearchPage() {
                                     <button
                                         onClick={nextPage}
                                         disabled={currentPage === totalPages}
-                                        className={`p-2 rounded-lg border transition-all duration-200 ${
-                                            currentPage === totalPages
+                                        className={`p-2 rounded-lg border transition-all duration-200 ${currentPage === totalPages
                                                 ? 'text-gray-400 border-gray-200 cursor-not-allowed'
                                                 : 'text-gray-600 border-gray-300 hover:bg-gray-50 hover:border-gray-400'
-                                        }`}
+                                            }`}
                                     >
                                         <FiChevronRight className="w-4 h-4" />
                                     </button>

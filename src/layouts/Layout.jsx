@@ -1,40 +1,20 @@
-import React, { useEffect, useState } from "react";
+import React, { useContext } from "react"; // 👈 Added useContext
 import { Outlet } from "react-router-dom";
-import Cookies from "js-cookie";
+import { AuthContext } from "./AuthContext"; // 👈 Import context
 import Header from "./Header";
 import Footer from "./Footer";
 
 const Layout = () => {
-    const [isLoggedIn, setIsLoggedIn] = useState(false);
-    const [user, setUser] = useState(null);
-
-    useEffect(() => {
-        const accessTokenUser = Cookies.get("accessToken_user");
-        const accessTokenProvider = Cookies.get("accessToken_travelProvider");
-        const loggedIn = !!accessTokenUser || !!accessTokenProvider;
-        setIsLoggedIn(loggedIn);
-
-        if (loggedIn) {
-            const userData = JSON.parse(localStorage.getItem("user")) || null;
-            setUser(userData);
-        }
-    }, []);
+    const { isLoggedIn, user, logout } = useContext(AuthContext); // 👈 Use context instead of local state/effect
 
     const handleLogout = () => {
-        Cookies.remove("accessToken_user");
-        Cookies.remove("refreshToken_user");
-        Cookies.remove("accessToken_travelProvider");
-        Cookies.remove("refreshToken_travelProvider");
-        localStorage.removeItem("user");
-        setIsLoggedIn(false);
-        setUser(null);
-        window.location.href = "/login";
+        logout(); // 👈 Use context logout
     };
 
     return (
         <>
             <Header isLoggedIn={isLoggedIn} user={user} onLogout={handleLogout} />
-            <main>
+            <main className="mt-8">
                 {/* 👇 This renders the current page */}
                 <Outlet />
             </main>

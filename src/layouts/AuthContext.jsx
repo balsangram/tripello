@@ -4,15 +4,18 @@ import Cookies from "js-cookie";
 export const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-    const [isLoggedIn, setIsLoggedIn] = useState(false);
+    const [isLoggedIn, setIsLoggedIn] = useState(null); // 👈 Changed to null for loading state
     const [user, setUser] = useState(null);
 
     useEffect(() => {
         const accessTokenUser = Cookies.get("accessToken_user");
+        console.log("🚀 ~ AuthProvider ~ accessTokenUser:", accessTokenUser);
         const accessTokenProvider = Cookies.get("accessToken_travelProvider");
+        console.log("🚀 ~ AuthProvider ~ accessTokenProvider:", accessTokenProvider);
         const loggedIn = !!accessTokenUser || !!accessTokenProvider;
+        console.log("🚀 ~ AuthProvider ~ loggedIn:", loggedIn);
 
-        setIsLoggedIn(loggedIn);
+        setIsLoggedIn(loggedIn); // 👈 Now sets after check
 
         if (loggedIn) {
             const userData = JSON.parse(localStorage.getItem("user")) || null;
