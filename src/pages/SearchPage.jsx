@@ -47,7 +47,7 @@ function SearchPage() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
 
-    // Pagination state
+    // Pagination State
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage] = useState(6);
     const [totalItems, setTotalItems] = useState(0);
