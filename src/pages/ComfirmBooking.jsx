@@ -1,45 +1,52 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-// In a real app, you'd use this to get data passed from the previous page
-// import { useLocation } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { AiFillStar, AiOutlineUser, AiOutlineTeam, AiOutlineHome, AiOutlineCalendar } from 'react-icons/ai';
 import { FaBed, FaBath, FaDoorOpen } from 'react-icons/fa';
+import Cookies from 'js-cookie';
 
 function ConfirmBooking() {
   const navigate = useNavigate();
-  // const location = useLocation();
-  // const bookingDataFromPrevPage = location.state?.bookingDetails;
+  const location = useLocation();
+  const bookingDataFromPrevPage = location.state?.bookingDetails;
 
   const [bookingDetails, setBookingDetails] = useState(null);
+  const [specialRequest, setSpecialRequest] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    // For now, we'll use dummy data. In a real app, you would use the
-    // 'bookingDataFromPrevPage' from useLocation() instead.
-    const dummyData = {
-      roomType: 'Deluxe Ocean View Suite',
-      guests: {
-        adults: 2,
-        children: 1,
-      },
-      rooms: 1,
-      dates: {
-        start: 'October 28, 2025',
-        end: 'October 30, 2025',
-      },
-      totalPrice: 249.99,
-      selectedRoom: {
-        image: 'https://images.unsplash.com/photo-1611892440504-42a792e24d32?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&q=80',
-        title: 'Luxury Beachfront Villa',
-        rating: 4.7,
-        reviews: 128,
-        beds: 2,
-        bedrooms: 1,
-        baths: 1,
-        amenities: ['Free WiFi', 'Air Conditioning', 'Ocean View', 'Private Balcony']
-      }
-    };
-    setBookingDetails(dummyData);
-  }, []);
+    if (bookingDataFromPrevPage) {
+      setBookingDetails(bookingDataFromPrevPage);
+      console.log('Received booking data:', bookingDataFromPrevPage);
+    } else {
+      // Fallback to dummy data if no data passed
+      const dummyData = {
+        roomType: 'Deluxe Ocean View Suite',
+        guests: {
+          adults: 2,
+          children: 1,
+          rooms: 1,
+        },
+        dates: {
+          startDisplay: 'October 28, 2025',
+          endDisplay: 'October 30, 2025',
+        },
+        totalPrice: 249.99,
+        selectedRoom: {
+          image: 'https://images.unsplash.com/photo-1611892440504-42a792e24d32?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&q=80',
+          title: 'Luxury Beachfront Villa',
+          rating: 4.7,
+          reviews: 128,
+          beds: 2,
+          bedrooms: 1,
+          baths: 1,
+          amenities: ['Free WiFi', 'Air Conditioning', 'Ocean View', 'Private Balcony']
+        }
+      };
+      setBookingDetails(dummyData);
+      console.warn('No booking data received, using dummy data');
+    }
+  }, [bookingDataFromPrevPage]);
 
   const renderStars = (rating) => {
     return Array.from({ length: 5 }, (_, i) => (
@@ -51,8 +58,67 @@ function ConfirmBooking() {
     ));
   };
 
+  const handleBookingSubmit = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      // Check for both user and provider tokens
+      const accessToken = Cookies.get('accessToken_user') || Cookies.get('accessToken_travelProvider');
+      if (!accessToken) {
+        alert('Please login to continue booking');
+        navigate('/login');
+        return;
+      }
+      
+      console.log('Access token found:', accessToken ? 'Yes' : 'No');
+
+      const bookingPayload = {
+        stay_id: bookingDetails.stayId,
+        room_type_id: bookingDetails.roomTypeId,
+        check_in_date: bookingDetails.dates.checkIn,
+        check_out_date: bookingDetails.dates.checkOut,
+        number_of_adults: bookingDetails.guests.adults,
+        number_of_children: bookingDetails.guests.children || 0,
+        number_of_rooms: bookingDetails.guests.rooms || 1,
+        special_requests: specialRequest,
+        total_price: bookingDetails.totalPrice,
+      };
+
+      console.log('Submitting booking:', bookingPayload);
+
+      const response = await fetch('http://localhost:5002/api/v1/booking', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify(bookingPayload),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to create booking');
+      }
+
+      console.log('Booking created successfully:', data);
+      alert('Booking created successfully! Booking ID: ' + data.booking._id);
+      
+      // Navigate to chat or booking confirmation page
+      navigate('/chatWithUs', { state: { bookingId: data.booking._id } });
+    } catch (err) {
+      console.error('Booking error:', err);
+      setError(err.message);
+      alert('Failed to create booking: ' + err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleChatClick = () => {
-    navigate('/chatWithUs');
+    // First submit the booking, then navigate to chat
+    handleBookingSubmit();
   };
 
   if (!bookingDetails) {
@@ -105,7 +171,7 @@ function ConfirmBooking() {
                     <div>
                       <p className="font-medium">Guests</p>
                       <p className="text-gray-900 font-semibold">
-                        {bookingDetails.guests.adults} Adults, {bookingDetails.guests.children} Children
+                        {bookingDetails.guests.adults} Adults{bookingDetails.guests.children ? `, ${bookingDetails.guests.children} Children` : ''}
                       </p>
                     </div>
                   </div>
@@ -115,7 +181,7 @@ function ConfirmBooking() {
                     <AiOutlineUser className="mr-3 text-gray-500" size={20} />
                     <div>
                       <p className="font-medium">Rooms</p>
-                      <p className="text-gray-900 font-semibold">{bookingDetails.rooms}</p>
+                      <p className="text-gray-900 font-semibold">{bookingDetails.guests.rooms || 1}</p>
                     </div>
                   </div>
                   <div className="flex items-center text-gray-700">
@@ -123,7 +189,7 @@ function ConfirmBooking() {
                     <div>
                       <p className="font-medium">Dates</p>
                       <p className="text-gray-900 font-semibold">
-                        {bookingDetails.dates.start} to {bookingDetails.dates.end}
+                        {bookingDetails.dates.startDisplay} to {bookingDetails.dates.endDisplay}
                       </p>
                     </div>
                   </div>
@@ -133,8 +199,15 @@ function ConfirmBooking() {
               <div className="mt-6 pt-4 border-t border-blue-200">
                 <div className="flex justify-between items-center">
                   <span className="text-lg font-semibold text-gray-800">Total Price</span>
-                  <span className="text-2xl font-bold text-blue-700">${bookingDetails.totalPrice}</span>
+                  <span className="text-2xl font-bold text-blue-700">₹{bookingDetails.totalPrice}</span>
                 </div>
+                {bookingDetails.priceBreakdown && (
+                  <div className="text-sm text-gray-600 mt-2 space-y-1">
+                    <p>Base Price: ₹{bookingDetails.priceBreakdown.basePrice}</p>
+                    <p>Cleaning Fee: ₹{bookingDetails.priceBreakdown.cleaningFee}</p>
+                    <p>Service Fee: ₹{bookingDetails.priceBreakdown.serviceFee}</p>
+                  </div>
+                )}
                 <p className="text-sm text-gray-600 mt-1">Includes all taxes and fees</p>
               </div>
             </div>
@@ -147,22 +220,35 @@ function ConfirmBooking() {
               <textarea
                 id="special-request"
                 rows="4"
+                value={specialRequest}
+                onChange={(e) => setSpecialRequest(e.target.value)}
                 className="w-full p-4 border border-gray-300 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all resize-none"
                 placeholder="Any special requests or preferences? (Optional)"
               ></textarea>
               <p className="text-sm text-gray-500 mt-2">We'll do our best to accommodate your needs</p>
             </div>
 
+            {/* Error Message */}
+            {error && (
+              <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-xl text-red-700">
+                {error}
+              </div>
+            )}
+
             {/* Action Buttons */}
             <div className="flex flex-col sm:flex-row gap-4">
               <button
                 onClick={handleChatClick}
-                className="flex-1 bg-red-600 text-white py-4 px-6 rounded-xl font-semibold hover:bg-red-700 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-1 text-lg"
+                disabled={loading}
+                className="flex-1 bg-red-600 text-white py-4 px-6 rounded-xl font-semibold hover:bg-red-700 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-1 text-lg disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Chat with Travel Provider
+                {loading ? 'Processing...' : 'Confirm & Chat with Provider'}
               </button>
-              <button className="flex-1 bg-white text-gray-800 py-4 px-6 rounded-xl font-semibold border-2 border-gray-300 hover:border-red-500 hover:text-red-600 transition-all text-lg">
-                Save for Later
+              <button 
+                onClick={() => navigate(-1)}
+                className="flex-1 bg-white text-gray-800 py-4 px-6 rounded-xl font-semibold border-2 border-gray-300 hover:border-red-500 hover:text-red-600 transition-all text-lg"
+              >
+                Go Back
               </button>
             </div>
 

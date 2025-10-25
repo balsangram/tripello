@@ -9,6 +9,7 @@ import Profile from "../pages/Profile";
 import ProtectedRoute from "./ProtectedRoute";
 import { AuthContext } from "../layouts/AuthContext";
 import RoomDetail from "../pages/RoomDetail";
+import ConfirmBooking from "../pages/ComfirmBooking";
 
 const AppRouter = () => {
     const { isLoggedIn } = useContext(AuthContext);
@@ -23,13 +24,15 @@ const AppRouter = () => {
                     <Route path="login" element={<Login />} />
                     <Route path="signup" element={<Register />} />
                     <Route path="search" element={<Search />} />
+                    <Route path="ConfirmBooking" element={<ConfirmBooking />} />
 
                     {/* Protected Routes */}
                     <Route
                         path="room-detail"
                         element={
-                            <ProtectedRoute> {/* 👈 Removed unused isLoggedIn prop */}
+                            <ProtectedRoute>
                                 <RoomDetail />
+                                <ConfirmBooking />
                             </ProtectedRoute>
                         }
                     />
