@@ -10,6 +10,7 @@ import ProtectedRoute from "./ProtectedRoute";
 import { AuthContext } from "../layouts/AuthContext";
 import RoomDetail from "../pages/RoomDetail";
 import ConfirmBooking from "../pages/ComfirmBooking";
+import ChatWithUs from "../pages/ChartWithUs";
 
 const AppRouter = () => {
     const { isLoggedIn } = useContext(AuthContext);
@@ -38,6 +39,8 @@ const AppRouter = () => {
                     />
 
                     <Route path="profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+                    <Route path="confirm-booking" element={<ProtectedRoute><ConfirmBooking /></ProtectedRoute>} />
+                    <Route path="chat-with-us" element={<ProtectedRoute><ChatWithUs /></ProtectedRoute>} />
                 </Route>
             </Routes>
         </BrowserRouter>

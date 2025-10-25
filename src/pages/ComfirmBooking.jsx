@@ -117,8 +117,7 @@ function ConfirmBooking() {
   };
 
   const handleChatClick = () => {
-    // First submit the booking, then navigate to chat
-    handleBookingSubmit();
+    navigate('/chat-with-us');
   };
 
   if (!bookingDetails) {
