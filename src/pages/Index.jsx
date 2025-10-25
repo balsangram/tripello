@@ -12,12 +12,13 @@ function Index() {
     <div className='mt-8'>
       <Hero />
       <Featured />
+      <Explore />
       <Recommended />
       <Work />
 
       <Suggestion />
 
-      <Explore />
+
       <Feedback />
     </div>
   )

@@ -10,10 +10,6 @@ function FeaturedCard({ image, bedrooms, bathrooms, title, location, price }) {
       />
 
       <div className="p-4">
-        <p className="text-gray-500 text-sm">
-          {bedrooms} bedrooms • {bathrooms} bathrooms
-        </p>
-
         <h2 className="text-lg font-semibold mt-1">{title}</h2>
 
         <div className="flex items-center text-gray-500 text-sm mt-1">

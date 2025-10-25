@@ -39,101 +39,41 @@ function Featured() {
         const response = await apiHandler({
           url: "/customer/feature",
           method: "GET",
-          requireAuth: true, // Assuming the endpoint requires authentication
+          requireAuth: true,
         });
 
-        console.log("API Response:", response); // Log to inspect structure
+        console.log("Full API Response:", response); // Log the entire response for debugging
 
-        // Handle different response structures
-        let dataArray = [];
-        if (Array.isArray(response)) {
-          dataArray = response;
-        } else if (response.data && Array.isArray(response.data)) {
-          dataArray = response.data;
-        } else if (response.features && Array.isArray(response.features)) {
-          dataArray = response.features;
+        // Validate and extract data
+        if (response && response.status === "success" && Array.isArray(response.data)) {
+          const dataArray = response.data;
+          const transformedData = dataArray.map((item, index) => ({
+            image: item.images && item.images.length > 0
+              ? item.images[0].url
+              : `https://images.unsplash.com/photo-1512917774080-9991${index}?w=800`, // Fallback image
+            title: item.title || "Unnamed Property",
+            location: item.city_name || "Unknown Location",
+            price: item.price || 0,
+          }));
+          setFeaturedData(transformedData);
+        } else if (response && response.error) {
+          console.log("API Error Response:", response);
+          throw new Error(response.error || "API returned an error");
         } else {
+          console.log("Unexpected response structure:", response);
           throw new Error("API response is not in expected format");
         }
-
-        // Transform API data to match FeaturedCard props
-        const transformedData = dataArray.map((item, index) => ({
-          image:
-            item.image ||
-            item.imageUrl ||
-            item.photo ||
-            `https://images.unsplash.com/photo-1512917774080-9991${index}?w=800`,
-          bedrooms: item.bedrooms || item.bedroomCount || 0,
-          bathrooms: item.bathrooms || item.bathroomCount || 0,
-          title: item.title || item.name || "Unnamed Property",
-          location: item.location || item.city || "Unknown Location",
-          price: item.price || 0,
-          rating: item.rating || 0,
-          reviews: item.reviews || item.reviewCount || 0,
-          popular: item.popular || false,
-        }));
-
-        setFeaturedData(transformedData);
         setIsLoading(false);
       } catch (err) {
         console.error("Error fetching featured data:", err);
         setError(err.message || "Failed to fetch featured listings");
         setIsLoading(false);
-        // Fallback to default data
-        setFeaturedData(getDefaultFeaturedData());
+        setFeaturedData([]); // Set empty array on error
       }
     };
 
     fetchFeaturedData();
   }, []);
-
-  // Default data for fallback
-  const getDefaultFeaturedData = () => [
-    {
-      image: "https://images.unsplash.com/photo-1512917774080-9991f01c0886?w=800",
-      bedrooms: 2,
-      bathrooms: 1,
-      title: "Cozy Mountain Cabin",
-      location: "Aspen, CO",
-      price: 200,
-      rating: 4.8,
-      reviews: 120,
-      popular: true,
-    },
-    {
-      image: "https://images.unsplash.com/photo-1570129477492-45c003edd2be?w=800",
-      bedrooms: 3,
-      bathrooms: 2,
-      title: "Beachfront Villa",
-      location: "Malibu, CA",
-      price: 350,
-      rating: 4.9,
-      reviews: 85,
-      popular: true,
-    },
-    {
-      image: "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=800",
-      bedrooms: 1,
-      bathrooms: 1,
-      title: "City Loft",
-      location: "New York, NY",
-      price: 150,
-      rating: 4.5,
-      reviews: 200,
-      popular: false,
-    },
-    {
-      image: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800",
-      bedrooms: 4,
-      bathrooms: 3,
-      title: "Luxury Countryside Estate",
-      location: "Tuscany, Italy",
-      price: 500,
-      rating: 4.7,
-      reviews: 65,
-      popular: true,
-    },
-  ];
 
   // Handle scroll navigation
   const handleScroll = (direction) => {
@@ -339,14 +279,9 @@ function Featured() {
                 >
                   <FeaturedCard
                     image={item.image}
-                    bedrooms={item.bedrooms}
-                    bathrooms={item.bathrooms}
                     title={item.title}
                     location={item.location}
                     price={item.price}
-                    rating={item.rating}
-                    reviews={item.reviews}
-                    popular={item.popular}
                   />
                 </div>
               ))

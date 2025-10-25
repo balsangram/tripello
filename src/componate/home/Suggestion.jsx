@@ -1,17 +1,6 @@
 import React, { useState, useEffect } from "react";
+import SuggestionCard from "../card/SuggestionCard"; // Adjust the import path to your SuggestionCard file
 import { apiHandler } from "../../utils/api"; // Adjust the import path to your api.js file
-
-function SuggestionCard({ image, title, subtitle }) {
-  return (
-    <div className="w-[300px] bg-[#f8f1e7] p-4 rounded-2xl flex flex-col items-center">
-      <div className="w-full h-[350px] overflow-hidden rounded-2xl">
-        <img src={image} alt={title} className="w-full h-full object-cover" />
-      </div>
-      <h3 className="mt-4 text-lg font-semibold text-center">{title}</h3>
-      <p className="text-gray-500 text-sm text-center">{subtitle}</p>
-    </div>
-  );
-}
 
 function Suggestion() {
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -23,7 +12,7 @@ function Suggestion() {
   const visibleCards = 4;
   const cardWidthPercentage = 100 / visibleCards;
 
-  // Define gradients for fallback
+  // Define gradients for visual enhancement
   const getGradient = (index) => {
     const gradients = [
       "from-blue-500/20 to-purple-500/20",
@@ -36,108 +25,73 @@ function Suggestion() {
     return gradients[index % gradients.length];
   };
 
+  // Static image mapping using only Unsplash URLs
+  const getStaticImage = (stayType) => {
+    const imageMap = {
+      "Standard rooms": "https://images.unsplash.com/photo-1611892440504-42a792e24d32?w=1000", // Default room
+      "Suites": "https://images.unsplash.com/photo-1613545325278-bd76f0e345b6?w=1000", // Luxury suite
+      "Deluxe rooms": "https://images.unsplash.com/photo-1600585154526-990d71c4e1f7?w=1000", // Deluxe room
+      "Villas": "https://images.unsplash.com/photo-1565488469940-2e4e1e8e8b51?w=1000", // Villa
+      "Bungalows": "https://images.unsplash.com/photo-1600585154312-c3ff6e41b58e?w=1000", // Bungalow
+      "Overwater bungalows": "https://images.unsplash.com/photo-1597476554287-4f90e92e3e4e?w=1000", // Overwater
+      "Homestay": "https://images.unsplash.com/photo-1600585154265-7b48e97a8c55?w=1000", // Homestay
+      "Cottage": "https://images.unsplash.com/photo-1600585154483-6b8a6d9c7a0f?w=1000", // Cottage
+      "Apartment": "https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=1000", // Apartment
+      "Farmhouse": "https://images.unsplash.com/photo-1600585154662-7f6d7e3c4a7e?w=1000", // Farmhouse
+      "Camp": "https://images.unsplash.com/photo-1600585154734-7e4a2f7b3f8f?w=1000", // Camping
+      "Beach hut": "https://images.unsplash.com/photo-1600585154718-9b5e3f8e7b75?w=1000", // Beach hut
+    };
+    const imageUrl = imageMap[stayType] || "https://via.placeholder.com/300x350";
+    console.log(`Image for ${stayType}: ${imageUrl}`); // Debug image URL
+    return imageUrl;
+  };
+
   // Fetch data from API using apiHandler
   useEffect(() => {
-    const fetchCityData = async () => {
+    const fetchStayTypes = async () => {
       try {
         setLoading(true);
         setError(null);
 
         const response = await apiHandler({
-          url: "/customer/city_based",
+          url: "/customer/stay_types",
           method: "GET",
           requireAuth: true, // Assuming the endpoint requires authentication
         });
 
         console.log("API Response:", response); // Log to inspect structure
 
-        // Handle different response structures
-        let dataArray = [];
+        // Validate and extract data
+        if (response && response.status === "success" && Array.isArray(response.data)) {
+          const dataArray = response.data;
+          if (dataArray.length === 0) {
+            throw new Error("No stay types available from API");
+          }
 
-        if (Array.isArray(response)) {
-          dataArray = response;
-        } else if (response.data && Array.isArray(response.data)) {
-          dataArray = response.data;
-        } else if (response.cities && Array.isArray(response.cities)) {
-          dataArray = response.cities;
-        } else if (response.results && Array.isArray(response.results)) {
-          dataArray = response.results;
+          // Transform API data to match card format
+          const transformedCards = dataArray.map((stayType, index) => ({
+            image: getStaticImage(stayType),
+            title: stayType,
+            subtitle: "Explore properties",
+            gradient: getGradient(index),
+          }));
+
+          setCards(transformedCards);
         } else {
+          console.log("Unexpected response structure:", response);
           throw new Error("API response is not in expected format");
         }
-
-        if (dataArray.length === 0) {
-          throw new Error("No data available from API");
-        }
-
-        // Transform API data to match card format
-        const transformedCards = dataArray.map((item, index) => ({
-          image:
-            item.image ||
-            item.imageUrl ||
-            item.img ||
-            item.photo ||
-            `https://images.unsplash.com/photo-150178588804${index}?w=1000`,
-          title: item.title || item.name || item.cityName || item.city || "Unknown City",
-          subtitle:
-            item.subtitle ||
-            (item.propertyCount ? `${item.propertyCount.toLocaleString()} properties` : null) ||
-            (item.count ? `${item.count.toLocaleString()} properties` : null) ||
-            (item.properties ? `${item.properties.toLocaleString()} properties` : "View properties"),
-          gradient: item.gradient || getGradient(index),
-        }));
-
-        setCards(transformedCards);
       } catch (err) {
-        console.error("Error fetching city data:", err);
-        setError(err.message || "Failed to fetch destinations");
-        setCards(getDefaultCards()); // Fallback to default data
+        console.error("Error fetching stay types:", err);
+        setError(err.message || "Failed to fetch stay types");
+        setCards([]); // No fallback data, just empty state
       } finally {
         setLoading(false);
       }
     };
 
-    fetchCityData();
+    fetchStayTypes();
   }, []);
-
-  const getDefaultCards = () => [
-    {
-      image: "https://images.unsplash.com/photo-1501785888041-af3ef285b470?w=1000",
-      title: "Enjoy the great cold",
-      subtitle: "50,000 properties",
-      gradient: "from-blue-500/20 to-purple-500/20",
-    },
-    {
-      image: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=1000",
-      title: "Sunny Beaches",
-      subtitle: "32,000 properties",
-      gradient: "from-amber-500/20 to-orange-500/20",
-    },
-    {
-      image: "https://images.unsplash.com/photo-1501785888041-af3ef285b470?w=1000",
-      title: "Mountain Escapes",
-      subtitle: "18,500 properties",
-      gradient: "from-emerald-500/20 to-teal-500/20",
-    },
-    {
-      image: "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=1000",
-      title: "City Lights",
-      subtitle: "41,200 properties",
-      gradient: "from-violet-500/20 to-fuchsia-500/20",
-    },
-    {
-      image: "https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=1000",
-      title: "Countryside Stay",
-      subtitle: "22,800 properties",
-      gradient: "from-green-500/20 to-lime-500/20",
-    },
-    {
-      image: "https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=1000",
-      title: "Nature Retreats",
-      subtitle: "15,300 properties",
-      gradient: "from-rose-500/20 to-pink-500/20",
-    },
-  ];
 
   const handleNext = () => {
     if (isAnimating || cards.length <= visibleCards) return;
@@ -191,7 +145,7 @@ function Suggestion() {
         <div className="flex justify-center items-center h-96">
           <div className="text-center">
             <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-            <p className="mt-4 text-gray-600">Loading destinations...</p>
+            <p className="mt-4 text-gray-600">Loading stay types...</p>
           </div>
         </div>
       </div>
@@ -217,7 +171,7 @@ function Suggestion() {
                 d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"
               />
             </svg>
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">Error Loading Destinations</h3>
+            <h3 className="text-xl font-semibold text-gray-900 mb-2">Error Loading Stay Types</h3>
             <p className="text-gray-600">{error}</p>
             <button
               onClick={() => window.location.reload()}
@@ -241,10 +195,10 @@ function Suggestion() {
       <div className="w-full relative z-10">
         <div className="text-center mb-12 px-6">
           <h2 className="text-4xl font-bold text-gray-900 mb-4 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-            Discover Your Perfect Getaway
+            Discover Your Perfect Stay Type
           </h2>
           <p className="text-xl text-gray-600 max-w-2xl mx-auto leading-relaxed">
-            Explore handpicked destinations with the perfect properties for your next adventure
+            Explore handpicked stay types with the perfect properties for your next adventure
           </p>
         </div>
 
