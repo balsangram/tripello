@@ -172,6 +172,8 @@ function RoomDetail() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [guestCount, setGuestCount] = useState({ adults: 2, children: 0, rooms: 1 });
+    const [roomCount, setRoomCount] = useState(1);
+    const [availableRooms, setAvailableRooms] = useState(0);
     const [currentMonth, setCurrentMonth] = useState(new Date().getMonth());
     const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
     const today = new Date();
@@ -197,16 +199,16 @@ function RoomDetail() {
                 console.log('API Response:', data);
                 console.log('Images from API:', data.stay.images);
                 const transformedData = {
-                    images: data.stay.images.map(img => img.url),
-                    title: data.stay.title,
-                    pricePerNight: data.stay.price,
-                    rating: data.overallRating.average_rating,
-                    reviews: data.overallRating.total_reviews,
-                    location: `${data.stay.city_name}, ${data.stay.state_name}`,
-                    stayType: data.stay.stayType,
-                    pincode: data.stay.pincode,
-                    locationUrl: data.stay.locationUrl,
-                    featured: data.stay.featured,
+                    images: data.stay.images?.length > 0 ? data.stay.images.map(img => img.url) : ['https://via.placeholder.com/800x600?text=No+Image'],
+                    title: data.stay.title || 'Untitled Stay',
+                    pricePerNight: data.stay.price || 0,
+                    rating: data.overallRating?.average_rating || 0,
+                    reviews: data.overallRating?.total_reviews || 0,
+                    location: `${data.stay.city_name || 'Unknown City'}, ${data.stay.state_name || 'Unknown State'}`,
+                    stayType: data.stay.stayType || 'Standard',
+                    pincode: data.stay.pincode || 'N/A',
+                    locationUrl: data.stay.locationUrl || '',
+                    featured: data.stay.featured || false,
                     host: {
                         name: data.stay.host_information.vendor_id.fullName,
                         profileImage: 'https://i.pravatar.cc/150?u=host', // Placeholder as API doesn't provide
@@ -215,40 +217,40 @@ function RoomDetail() {
                         responseTime: 'within a few hours', // Placeholder
                         about: data.stay.stay_information || 'No description provided.',
                     },
-                    guests: data.stay.adults + data.stay.children,
-                    beds: data.roomTypes.reduce((sum, rt) => sum + rt.beds, 0),
-                    baths: data.roomTypes.reduce((sum, rt) => sum + rt.baths, 0),
-                    bedrooms: data.roomTypes.reduce((sum, rt) => sum + rt.bedrooms, 0),
-                    roomTypes: data.roomTypes.map(rt => ({
+                    guests: (data.stay.adults || 0) + (data.stay.children || 0),
+                    beds: data.roomTypes?.reduce((sum, rt) => sum + (rt.beds || 0), 0) || 0,
+                    baths: data.roomTypes?.reduce((sum, rt) => sum + (rt.baths || 0), 0) || 0,
+                    bedrooms: data.roomTypes?.reduce((sum, rt) => sum + (rt.bedrooms || 0), 0) || 0,
+                    roomTypes: data.roomTypes?.map(rt => ({
                         id: rt._id,
-                        image: rt.images[0]?.url || 'https://via.placeholder.com/150',
-                        name: rt.title,
-                        beds: rt.beds,
-                        baths: rt.baths,
-                        bedrooms: rt.bedrooms,
-                        max_adults: rt.max_adults,
-                        max_children: rt.max_children,
+                        image: rt.images?.[0]?.url || 'https://via.placeholder.com/150?text=Room',
+                        name: rt.title || 'Unnamed Room',
+                        beds: rt.beds || 1,
+                        baths: rt.baths || 1,
+                        bedrooms: rt.bedrooms || 1,
+                        max_adults: rt.max_adults || 2,
+                        max_children: rt.max_children || 0,
                         sqFt: 1200, // Placeholder as API doesn't provide
-                        price: rt.price_per_night,
+                        price: rt.price_per_night || 0,
                         features: ['Standard'], // Placeholder as API doesn't provide specific features
-                        description: rt.description,
+                        description: rt.description || 'No description available',
                         availability: rt.availability || [], // Include availability data from API
-                    })),
-                    stayInformation: data.stay.stay_information,
+                    })) || [],
+                    stayInformation: data.stay.stay_information || 'No additional information provided',
                     amenities: [
-                        ...data.stay.amenities.map(name => ({ icon: getAmenityIcon(name), name })),
-                        ...data.stay.standoutAmenities.map(name => ({ icon: getAmenityIcon(name), name })),
-                        ...data.stay.safetyItems.map(name => ({ icon: getAmenityIcon(name), name })),
+                        ...(data.stay.amenities || []).map(name => ({ icon: getAmenityIcon(name), name })),
+                        ...(data.stay.standoutAmenities || []).map(name => ({ icon: getAmenityIcon(name), name })),
+                        ...(data.stay.safetyItems || []).map(name => ({ icon: getAmenityIcon(name), name })),
                     ],
                     stayId: data.stay._id,
-                    cancellationPolicy: data.stay.cancellation_policy,
-                    checkInTime: data.stay.checkin_time,
-                    checkOutTime: data.stay.checkout_time,
-                    specialNote: data.stay.special_notes.split(',').map(note => note.trim()),
+                    cancellationPolicy: data.stay.cancellation_policy || 'Standard cancellation policy applies',
+                    checkInTime: data.stay.checkin_time || '14:00',
+                    checkOutTime: data.stay.checkout_time || '11:00',
+                    specialNote: data.stay.special_notes ? data.stay.special_notes.split(',').map(note => note.trim()) : ['No special notes'],
                     locationDetails: {
                         latitude: 12.9716, // Placeholder as API doesn't provide
                         longitude: 77.5946, // Placeholder for Bengaluru
-                        mapImage: data.stay.city_id.image.url,
+                        mapImage: data.stay.city_id?.image?.url || 'https://via.placeholder.com/800x400?text=Map',
                         locationUrl: data.stay.locationUrl,
                         rating: '4.5', // Placeholder
                         ratingDescription: 'Great',
@@ -260,9 +262,23 @@ function RoomDetail() {
                         ],
                     },
                 };
+                
+                // Check if room types exist
+                if (!transformedData.roomTypes || transformedData.roomTypes.length === 0) {
+                    setError('No room types available for this stay');
+                    setLoading(false);
+                    return;
+                }
+                
                 setRoomData(transformedData);
                 setSelectedRoomType(transformedData.roomTypes[0]); // Set default room type
                 setDisplayPrice(transformedData.roomTypes[0].price); // Set initial display price
+                // Set initial guest count based on first room type's capacity
+                setGuestCount({
+                    adults: Math.min(2, transformedData.roomTypes[0].max_adults),
+                    children: 0,
+                    rooms: 1
+                });
                 setLoading(false);
             } catch (err) {
                 setError(err.message);
@@ -304,11 +320,64 @@ function RoomDetail() {
                 priceSum += nightPrice;
             }
             
-            setTotalPrice(total);
+            setTotalPrice(total * roomCount); // Multiply by number of rooms
             // Set display price as average of selected dates
             setDisplayPrice(nights > 0 ? Math.round(priceSum / nights) : selectedRoomType.price);
         }
-    }, [selectedDates, selectedRoomType, roomData]);
+    }, [selectedDates, selectedRoomType, roomData, roomCount]);
+
+    // Calculate available rooms for selected dates
+    useEffect(() => {
+        if (!selectedRoomType || selectedDates.length < 2) {
+            setAvailableRooms(0);
+            return;
+        }
+
+        // Check if room type has availability data
+        const hasAvailabilityData = selectedRoomType.availability && Array.isArray(selectedRoomType.availability) && selectedRoomType.availability.length > 0;
+        
+        if (!hasAvailabilityData) {
+            // No availability data tracked for this room type
+            setAvailableRooms(-1); // -1 indicates unlimited/not tracked
+            return;
+        }
+
+        // Get minimum available rooms across all selected dates
+        const availabilityMap = {};
+        selectedRoomType.availability.forEach(avail => {
+            const date = new Date(avail.date);
+            const dateKey = date.toISOString().split('T')[0];
+            availabilityMap[dateKey] = avail.available_rooms || 0;
+        });
+
+        // Check availability for each night in the selected date range
+        const nights = selectedDates.length - 1;
+        let minAvailable = Infinity;
+        let hasDateWithoutData = false;
+        
+        for (let i = 0; i < nights; i++) {
+            const nightDate = selectedDates[i];
+            if (availabilityMap.hasOwnProperty(nightDate)) {
+                const roomsAvailable = availabilityMap[nightDate];
+                minAvailable = Math.min(minAvailable, roomsAvailable);
+            } else {
+                // This date doesn't have availability data
+                hasDateWithoutData = true;
+                minAvailable = 0; // Cannot book if any date lacks data
+                break;
+            }
+        }
+
+        // If we found dates without data, set to 0 (unavailable)
+        // Otherwise use the minimum found
+        const finalAvailable = hasDateWithoutData ? 0 : (minAvailable === Infinity ? 0 : minAvailable);
+        setAvailableRooms(finalAvailable);
+        
+        // Reset room count if it exceeds available
+        if (finalAvailable > 0 && roomCount > finalAvailable) {
+            setRoomCount(Math.min(roomCount, finalAvailable));
+        }
+    }, [selectedDates, selectedRoomType, roomCount]);
 
     const handleDateSelect = (dateString) => {
         const selectedDate = new Date(dateString);
@@ -370,9 +439,14 @@ function RoomDetail() {
         const blanks = Array.from({ length: firstDayOfMonth });
         const days = Array.from({ length: daysInMonth }, (_, i) => i + 1);
 
+        // Check if this room type tracks availability
+        const hasAvailabilityTracking = selectedRoomType.availability && 
+                                       Array.isArray(selectedRoomType.availability) && 
+                                       selectedRoomType.availability.length > 0;
+
         // Create a map of availability from backend for quick lookup
         const availabilityMap = {};
-        if (selectedRoomType.availability && Array.isArray(selectedRoomType.availability)) {
+        if (hasAvailabilityTracking) {
             selectedRoomType.availability.forEach(avail => {
                 const date = new Date(avail.date);
                 const dateKey = date.toISOString().split('T')[0];
@@ -398,10 +472,34 @@ function RoomDetail() {
                     const isPast = dateObj < today;
                     const isSelected = selectedDates.includes(dateString);
                     const availInfo = availabilityMap[dateString];
-                    const isAvailable = availInfo ? availInfo.available : true; // Default to available if not in backend
+                    
+                    // Determine availability based on whether room type tracks it
+                    let isAvailable;
+                    if (hasAvailabilityTracking) {
+                        // If tracking availability, only dates in availabilityMap are selectable
+                        isAvailable = availInfo ? availInfo.available : false;
+                    } else {
+                        // If not tracking, all future dates are available
+                        isAvailable = true;
+                    }
+                    
                     const displayPrice = availInfo ? availInfo.price : selectedRoomType.price;
                     
                     const isDisabled = isPast || !isAvailable;
+                    
+                    // Create meaningful tooltip
+                    let tooltipText = 'Click to select';
+                    if (isPast) {
+                        tooltipText = 'Past date';
+                    } else if (!isAvailable) {
+                        if (hasAvailabilityTracking) {
+                            tooltipText = availInfo && availInfo.rooms === 0 
+                                ? 'Fully booked' 
+                                : 'No availability data for this date';
+                        } else {
+                            tooltipText = 'Not available';
+                        }
+                    }
                     
                     return (
                         <div
@@ -413,7 +511,7 @@ function RoomDetail() {
                             ${isSelected && !isDisabled ? 'bg-blue-600 text-white hover:bg-blue-700' : ''}
                         `}
                             onClick={() => !isDisabled && handleDateSelect(dateString)}
-                            title={isPast ? 'Past date' : !isAvailable ? 'Not available' : 'Click to select'}
+                            title={tooltipText}
                         >
                             <p className={`font-semibold ${isDisabled ? 'line-through' : ''}`}>{day}</p>
                             <p className="text-xs">₹{displayPrice}</p>
@@ -528,6 +626,14 @@ function RoomDetail() {
                                     setDisplayPrice(selected.price); // Reset display price to new room's base price
                                     setSelectedDates([]); // Clear selected dates when changing room
                                     setTotalPrice(0); // Reset total price
+                                    setRoomCount(1); // Reset to 1 room
+                                    setAvailableRooms(0); // Reset available rooms
+                                    // Reset guest count to match new room type's capacity
+                                    setGuestCount({ 
+                                        adults: Math.min(2, selected.max_adults), 
+                                        children: 0, 
+                                        rooms: 1 
+                                    });
                                 }}
                             >
                                 {roomData.roomTypes.map(rt => (
@@ -560,7 +666,12 @@ function RoomDetail() {
 
                     <section className="border-b pb-6">
                         <h3 className="text-2xl font-bold text-gray-900 mb-2">Availability</h3>
-                        <p className="text-gray-600 mb-4">Prices may increase on weekends or holidays. Past dates and unavailable dates are disabled.</p>
+                        <p className="text-gray-600 mb-4">
+                            {selectedRoomType.availability && selectedRoomType.availability.length > 0 
+                                ? 'Only dates with room availability are selectable. Prices may vary by date.'
+                                : 'Select your preferred dates. Past dates are disabled.'
+                            }
+                        </p>
                         <div className="flex justify-between items-center mb-4">
                             <button 
                                 onClick={handlePrevMonth}
@@ -583,14 +694,18 @@ function RoomDetail() {
 
                     <section className="border-b pb-6">
                         <h3 className="text-2xl font-bold text-gray-900 mb-4">What this place offers</h3>
-                        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                            {roomData.amenities.map(a => (
-                                <div key={a.name} className="flex items-center text-gray-800">
-                                    <span className="mr-3 text-2xl">{a.icon}</span>
-                                    <span>{a.name}</span>
-                                </div>
-                            ))}
-                        </div>
+                        {roomData.amenities && roomData.amenities.length > 0 ? (
+                            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                                {roomData.amenities.map((a, index) => (
+                                    <div key={`${a.name}-${index}`} className="flex items-center text-gray-800">
+                                        <span className="mr-3 text-2xl">{a.icon}</span>
+                                        <span>{a.name}</span>
+                                    </div>
+                                ))}
+                            </div>
+                        ) : (
+                            <p className="text-gray-500 italic">No amenities information available</p>
+                        )}
                     </section>
 
                     <LocationComponent details={roomData.locationDetails} />
@@ -659,29 +774,73 @@ function RoomDetail() {
                                 </div>
                             </div>
                             <div className="border-t pt-2">
-                                <label htmlFor="guests" className="block text-xs font-bold text-gray-700">GUESTS & ROOMS</label>
-                                <select 
-                                    id="guests" 
-                                    className="w-full border-none p-0 focus:ring-0"
-                                    onChange={(e) => {
-                                        const [adults, children] = e.target.value.split('-').map(Number);
-                                        setGuestCount({ adults, children, rooms: 1 });
-                                    }}
-                                >
-                                    <option value={`${selectedRoomType.max_adults}-0`}>
-                                        {selectedRoomType.max_adults} Adult{selectedRoomType.max_adults > 1 ? 's' : ''}, 0 Children
-                                    </option>
-                                    {selectedRoomType.max_children > 0 && (
-                                        <option value={`${selectedRoomType.max_adults}-${selectedRoomType.max_children}`}>
-                                            {selectedRoomType.max_adults} Adult{selectedRoomType.max_adults > 1 ? 's' : ''}, {selectedRoomType.max_children} Child{selectedRoomType.max_children > 1 ? 'ren' : ''}
-                                        </option>
+                                <label className="block text-xs font-bold text-gray-700 mb-2">GUESTS PER ROOM</label>
+                                <div className="bg-gray-50 rounded-lg p-3">
+                                    <p className="text-sm text-gray-800 font-medium">
+                                        Max: {selectedRoomType.max_adults} Adult{selectedRoomType.max_adults > 1 ? 's' : ''}, {selectedRoomType.max_children} Child{selectedRoomType.max_children !== 1 ? 'ren' : ''}
+                                    </p>
+                                </div>
+                            </div>
+                            
+                            {/* Room Counter Section */}
+                            <div className="border-t pt-4 mt-2">
+                                <div className="flex justify-between items-center mb-2">
+                                    <label className="block text-xs font-bold text-gray-700">NUMBER OF ROOMS</label>
+                                    {selectedDates.length >= 2 && availableRooms > 0 && (
+                                        <span className="text-xs text-green-600 font-semibold">
+                                            {availableRooms} room{availableRooms > 1 ? 's' : ''} available
+                                        </span>
                                     )}
-                                    {selectedRoomType.max_adults > 1 && (
-                                        <option value={`${selectedRoomType.max_adults - 1}-0`}>
-                                            {selectedRoomType.max_adults - 1} Adult{selectedRoomType.max_adults - 1 > 1 ? 's' : ''}, 0 Children
-                                        </option>
-                                    )}
-                                </select>
+                                </div>
+                                <div className="flex items-center justify-between bg-gray-50 rounded-lg p-3">
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            if (roomCount > 1) {
+                                                const newCount = roomCount - 1;
+                                                setRoomCount(newCount);
+                                                setGuestCount(prev => ({ ...prev, rooms: newCount }));
+                                            }
+                                        }}
+                                        disabled={roomCount <= 1}
+                                        className="w-10 h-10 flex items-center justify-center bg-white border-2 border-gray-300 rounded-full text-gray-700 font-bold text-lg hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                                    >
+                                        −
+                                    </button>
+                                    <div className="flex flex-col items-center">
+                                        <span className="text-2xl font-bold text-gray-900">{roomCount}</span>
+                                        <span className="text-xs text-gray-500">Room{roomCount > 1 ? 's' : ''}</span>
+                                    </div>
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            // Determine max rooms based on availability
+                                            let maxRooms = 10; // Default for unlimited
+                                            if (selectedDates.length >= 2 && availableRooms > 0) {
+                                                maxRooms = availableRooms;
+                                            }
+                                            
+                                            if (roomCount < maxRooms) {
+                                                const newCount = roomCount + 1;
+                                                setRoomCount(newCount);
+                                                setGuestCount(prev => ({ ...prev, rooms: newCount }));
+                                            }
+                                        }}
+                                        disabled={selectedDates.length >= 2 && availableRooms === 0 || (availableRooms > 0 && roomCount >= availableRooms)}
+                                        className="w-10 h-10 flex items-center justify-center bg-blue-600 border-2 border-blue-600 rounded-full text-white font-bold text-lg hover:bg-blue-700 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                                    >
+                                        +
+                                    </button>
+                                </div>
+                                {selectedDates.length < 2 && (
+                                    <p className="text-xs text-gray-500 mt-2 text-center">Select dates to see room availability</p>
+                                )}
+                                {selectedDates.length >= 2 && availableRooms === 0 && (
+                                    <p className="text-xs text-red-600 mt-2 text-center font-semibold">No rooms available for selected dates</p>
+                                )}
+                                {selectedDates.length >= 2 && availableRooms === -1 && (
+                                    <p className="text-xs text-blue-600 mt-2 text-center">You can select up to 10 rooms</p>
+                                )}
                             </div>
                         </div>
 
@@ -691,16 +850,27 @@ function RoomDetail() {
 
                         <p className="text-center text-sm text-gray-500 my-4">You won't be charged yet</p>
 
-                        <div className="space-y-2 text-gray-700">
+                        <div className="space-y-2 text-gray-700 text-sm">
                             <p className="flex justify-between">
-                                <span>₹{displayPrice} x {selectedDates.length > 1 ? selectedDates.length - 1 : 0} nights</span>
-                                <span>₹{totalPrice}</span>
+                                <span>₹{displayPrice} × {selectedDates.length > 1 ? selectedDates.length - 1 : 0} night{selectedDates.length > 2 ? 's' : ''}</span>
+                                <span>₹{Math.round(totalPrice / (roomCount || 1))}</span>
                             </p>
+                            {roomCount > 1 && (
+                                <p className="flex justify-between font-semibold text-blue-700">
+                                    <span>× {roomCount} room{roomCount > 1 ? 's' : ''}</span>
+                                    <span>₹{totalPrice}</span>
+                                </p>
+                            )}
+                            {selectedDates.length >= 2 && (
+                                <p className="text-xs text-gray-500 mt-1">
+                                    Max capacity: {selectedRoomType.max_adults} adult{selectedRoomType.max_adults > 1 ? 's' : ''}, {selectedRoomType.max_children} child{selectedRoomType.max_children !== 1 ? 'ren' : ''} per room
+                                </p>
+                            )}
                         </div>
 
                         <div className="border-t mt-4 pt-4 flex justify-between font-bold text-lg">
-                            <span>Total</span>
-                            <span>₹{totalPrice}</span>
+                            <span>Total{roomCount > 1 ? ` (${roomCount} room${roomCount > 1 ? 's' : ''})` : ''}</span>
+                            <span className="text-blue-700">₹{totalPrice}</span>
                         </div>
                     </div>
                 </aside>
