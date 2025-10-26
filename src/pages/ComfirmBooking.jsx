@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { AiFillStar, AiOutlineUser, AiOutlineTeam, AiOutlineHome, AiOutlineCalendar } from 'react-icons/ai';
 import { FaBed, FaBath, FaDoorOpen } from 'react-icons/fa';
-import Cookies from 'js-cookie';
+import { apiHandler } from '../utils/api';
 
 function ConfirmBooking() {
   const navigate = useNavigate();
@@ -58,66 +58,66 @@ function ConfirmBooking() {
     ));
   };
 
-  const handleBookingSubmit = async () => {
+  const handleChatClick = async () => {
     try {
       setLoading(true);
       setError(null);
 
-      // Check for both user and provider tokens
-      const accessToken = Cookies.get('accessToken_user') || Cookies.get('accessToken_travelProvider');
-      if (!accessToken) {
-        alert('Please login to continue booking');
+      // Check if user is logged in
+      const userData = JSON.parse(localStorage.getItem('userData') || '{}');
+      if (!userData.user || !userData.user._id) {
+        alert('Please login to create a booking');
         navigate('/login');
         return;
       }
-      
-      console.log('Access token found:', accessToken ? 'Yes' : 'No');
+
+      console.log('User logged in as:', userData.user);
 
       const bookingPayload = {
+        user_id: userData.user._id, // Explicitly pass user_id
         stay_id: bookingDetails.stayId,
-        room_type_id: bookingDetails.roomTypeId,
-        check_in_date: bookingDetails.dates.checkIn,
-        check_out_date: bookingDetails.dates.checkOut,
-        number_of_adults: bookingDetails.guests.adults,
-        number_of_children: bookingDetails.guests.children || 0,
-        number_of_rooms: bookingDetails.guests.rooms || 1,
-        special_requests: specialRequest,
-        total_price: bookingDetails.totalPrice,
+        roomTypeId: bookingDetails.roomTypeId,
+        numAdults: bookingDetails.guests.adults,
+        numChildren: bookingDetails.guests.children || 0,
+        numRooms: bookingDetails.guests.rooms || 1,
+        startDate: bookingDetails.dates.checkIn,
+        endDate: bookingDetails.dates.checkOut,
+        totalPrice: bookingDetails.totalPrice,
+        userMessage: specialRequest || '',
       };
 
-      console.log('Submitting booking:', bookingPayload);
+      console.log('Creating booking before chat:', bookingPayload);
 
-      const response = await fetch('http://localhost:5002/api/v1/booking', {
+      const response = await apiHandler({
+        url: '/booking',
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${accessToken}`,
-        },
-        body: JSON.stringify(bookingPayload),
+        data: bookingPayload,
+        requireAuth: true,
       });
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || 'Failed to create booking');
-      }
-
-      console.log('Booking created successfully:', data);
-      alert('Booking created successfully! Booking ID: ' + data.booking._id);
+      console.log('Booking created successfully:', response);
       
-      // Navigate to chat or booking confirmation page
-      navigate('/chatWithUs', { state: { bookingId: data.booking._id } });
+      if (response.success && response.booking_id) {
+        // Navigate to chat with booking ID
+        navigate('/chat-with-us', { 
+          state: { 
+            bookingId: response.booking_id,
+            bookingDetails: response.data 
+          } 
+        });
+      } else {
+        throw new Error('Invalid booking response');
+      }
     } catch (err) {
       console.error('Booking error:', err);
-      setError(err.message);
-      alert('Failed to create booking: ' + err.message);
+      const errorMessage = err.message || err.error || 'Failed to create booking. Please try again.';
+      setError(errorMessage);
+      
+      // Scroll to top to show error
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleChatClick = () => {
-    navigate('/chat-with-us');
   };
 
   if (!bookingDetails) {
@@ -130,24 +130,14 @@ function ConfirmBooking() {
 
   return (
     <div className="bg-gradient-to-br from-gray-50 to-gray-100 font-sans min-h-screen">
-      {/* Header */}
-      <header className="bg-white shadow-lg p-4 sticky top-0 z-10 border-b border-gray-200">
-        <div className="container mx-auto flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-red-600">Tripeoo</h1>
-          <nav>
-            <a href="#" className="text-gray-700 hover:text-red-600 font-medium transition-colors">Travelers</a>
-          </nav>
-        </div>
-      </header>
-
       {/* Main Content */}
-      <main className="container mx-auto p-4 md:p-8 mt-4">
+      <main className="container mx-auto p-4 md:p-8 mt-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
           {/* Left Column: Finalize Booking Form */}
           <div className="lg:col-span-2 bg-white p-8 rounded-2xl shadow-xl border border-gray-100">
             <div className="mb-8">
-              <h2 className="text-3xl font-bold text-gray-900 mb-2">Confirm Your Booking</h2>
-              <p className="text-gray-600">Review your details and complete your reservation</p>
+              <h2 className="text-3xl font-bold text-gray-900 mb-2">Review Your Booking</h2>
+              <p className="text-gray-600">Review your details and chat with the provider to complete your booking</p>
             </div>
 
             {/* Booking Summary Card */}
@@ -200,14 +190,11 @@ function ConfirmBooking() {
                   <span className="text-lg font-semibold text-gray-800">Total Price</span>
                   <span className="text-2xl font-bold text-blue-700">₹{bookingDetails.totalPrice}</span>
                 </div>
-                {bookingDetails.priceBreakdown && (
-                  <div className="text-sm text-gray-600 mt-2 space-y-1">
+                {bookingDetails.priceBreakdown && bookingDetails.priceBreakdown.basePrice && (
+                  <div className="text-sm text-gray-600 mt-2">
                     <p>Base Price: ₹{bookingDetails.priceBreakdown.basePrice}</p>
-                    <p>Cleaning Fee: ₹{bookingDetails.priceBreakdown.cleaningFee}</p>
-                    <p>Service Fee: ₹{bookingDetails.priceBreakdown.serviceFee}</p>
                   </div>
                 )}
-                <p className="text-sm text-gray-600 mt-1">Includes all taxes and fees</p>
               </div>
             </div>
 
@@ -229,8 +216,23 @@ function ConfirmBooking() {
 
             {/* Error Message */}
             {error && (
-              <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-xl text-red-700">
-                {error}
+              <div className="mb-4 p-4 bg-red-50 border-2 border-red-300 rounded-xl">
+                <div className="flex items-start">
+                  <div className="flex-shrink-0">
+                    <svg className="h-5 w-5 text-red-600 mt-0.5" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                  <div className="ml-3">
+                    <h3 className="text-sm font-semibold text-red-800">Booking Failed</h3>
+                    <p className="text-sm text-red-700 mt-1">{error}</p>
+                    {error.includes('User not found') && (
+                      <p className="text-xs text-red-600 mt-2">
+                        Please make sure you are logged in. <a href="/login" className="underline font-semibold">Click here to login</a>
+                      </p>
+                    )}
+                  </div>
+                </div>
               </div>
             )}
 
@@ -241,7 +243,7 @@ function ConfirmBooking() {
                 disabled={loading}
                 className="flex-1 bg-red-600 text-white py-4 px-6 rounded-xl font-semibold hover:bg-red-700 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-1 text-lg disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {loading ? 'Processing...' : 'Confirm & Chat with Provider'}
+                {loading ? 'Processing...' : 'Chat with Us to Confirm Booking'}
               </button>
               <button 
                 onClick={() => navigate(-1)}
@@ -252,7 +254,7 @@ function ConfirmBooking() {
             </div>
 
             <p className="text-center text-gray-600 mt-6 text-sm">
-              By completing this booking, you agree to our Terms of Service and Privacy Policy
+              By proceeding, you agree to our Terms of Service and Privacy Policy
             </p>
           </div>
 

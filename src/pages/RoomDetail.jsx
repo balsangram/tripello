@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { apiHandler } from '../utils/api';
 
 // --- Inlined SVG Icons (unchanged) ---
 const WifiIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12.55a11 11 0 0 1 14.08 0"></path><path d="M1.42 9a16 16 0 0 1 21.16 0"></path><path d="M8.53 16.11a6 6 0 0 1 6.95 0"></path><line x1="12" y1="20" x2="12.01" y2="20"></line></svg>;
@@ -21,11 +22,42 @@ const SquareIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" heig
 const BedIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 4v16"></path><path d="M2 10h20"></path><path d="M6 14v-4"></path></svg>;
 const StarIcon = ({ className }) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" className={className} strokeWidth="1" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>;
 
+// Helper function to get appropriate icon for amenity
+const getAmenityIcon = (amenityName) => {
+    const name = amenityName.toLowerCase();
+    if (name.includes('wifi') || name.includes('internet')) return <WifiIcon />;
+    if (name.includes('kitchen') || name.includes('coffee')) return <CoffeeIcon />;
+    if (name.includes('parking') || name.includes('car')) return <CarIcon />;
+    if (name.includes('workspace') || name.includes('desk')) return <WorkspaceIcon />;
+    if (name.includes('pool') || name.includes('swimming')) return <PoolIcon />;
+    if (name.includes('grill') || name.includes('bbq')) return <GrillIcon />;
+    if (name.includes('pool table') || name.includes('game')) return <PoolTableIcon />;
+    if (name.includes('gym') || name.includes('fitness') || name.includes('exercise')) return <DumbbellIcon />;
+    if (name.includes('hot tub') || name.includes('jacuzzi') || name.includes('spa')) return <HotTubIcon />;
+    if (name.includes('ski')) return <SkiIcon />;
+    if (name.includes('shower') || name.includes('bath')) return <ShowerIcon />;
+    if (name.includes('alarm') || name.includes('extinguisher') || name.includes('aid')) return <FireExtinguisherIcon />;
+    if (name.includes('conditioning') || name.includes('ac')) return <WifiIcon />; // Using WiFi as placeholder for AC
+    return <WifiIcon />; // Default icon
+};
+
 const LocationComponent = ({ details }) => {
     if (!details) return null;
     return (
         <section className="border-b pb-6">
-            <h3 className="text-2xl font-bold text-gray-900 mb-4">Location</h3>
+            <div className="flex justify-between items-center mb-4">
+                <h3 className="text-2xl font-bold text-gray-900">Location</h3>
+                {details.locationUrl && (
+                    <a 
+                        href={details.locationUrl} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-blue-700 transition-colors"
+                    >
+                        View on Google Maps
+                    </a>
+                )}
+            </div>
             <img src={details.mapImage} alt="Map" className="rounded-lg mb-4 w-full h-64 object-cover" />
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
@@ -136,20 +168,31 @@ function RoomDetail() {
     const [selectedRoomType, setSelectedRoomType] = useState(null);
     const [selectedDates, setSelectedDates] = useState([]);
     const [totalPrice, setTotalPrice] = useState(0);
+    const [displayPrice, setDisplayPrice] = useState(0); // Price to show in sidebar
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [guestCount, setGuestCount] = useState({ adults: 2, children: 0, rooms: 1 });
+    const [currentMonth, setCurrentMonth] = useState(new Date().getMonth());
+    const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
 
     // API fetch
     useEffect(() => {
         const fetchRoomData = async () => {
+            if (!stayId) {
+                setError('No stay ID provided');
+                setLoading(false);
+                return;
+            }
+            
             try {
                 setLoading(true);
-                const response = await fetch('http://localhost:5002/api/v1/stay/68fc67015d9b644fc91ed910');
-                if (!response.ok) {
-                    throw new Error('Failed to fetch room details');
-                }
-                const data = await response.json();
+                const data = await apiHandler({
+                    url: `/stay/${stayId}`,
+                    method: 'GET',
+                    requireAuth: false
+                });
                 // Transform API data to match component structure
                 console.log('API Response:', data);
                 console.log('Images from API:', data.stay.images);
@@ -160,6 +203,10 @@ function RoomDetail() {
                     rating: data.overallRating.average_rating,
                     reviews: data.overallRating.total_reviews,
                     location: `${data.stay.city_name}, ${data.stay.state_name}`,
+                    stayType: data.stay.stayType,
+                    pincode: data.stay.pincode,
+                    locationUrl: data.stay.locationUrl,
+                    featured: data.stay.featured,
                     host: {
                         name: data.stay.host_information.vendor_id.fullName,
                         profileImage: 'https://i.pravatar.cc/150?u=host', // Placeholder as API doesn't provide
@@ -178,23 +225,22 @@ function RoomDetail() {
                         name: rt.title,
                         beds: rt.beds,
                         baths: rt.baths,
+                        bedrooms: rt.bedrooms,
+                        max_adults: rt.max_adults,
+                        max_children: rt.max_children,
                         sqFt: 1200, // Placeholder as API doesn't provide
                         price: rt.price_per_night,
                         features: ['Standard'], // Placeholder as API doesn't provide specific features
                         description: rt.description,
+                        availability: rt.availability || [], // Include availability data from API
                     })),
                     stayInformation: data.stay.stay_information,
                     amenities: [
-                        ...data.stay.amenities.map(name => ({ icon: <WifiIcon />, name })),
-                        ...data.stay.standoutAmenities.map(name => ({ icon: <PoolIcon />, name })),
-                        ...data.stay.safetyItems.map(name => ({ icon: <FireExtinguisherIcon />, name })),
+                        ...data.stay.amenities.map(name => ({ icon: getAmenityIcon(name), name })),
+                        ...data.stay.standoutAmenities.map(name => ({ icon: getAmenityIcon(name), name })),
+                        ...data.stay.safetyItems.map(name => ({ icon: getAmenityIcon(name), name })),
                     ],
-                    availability: {
-                        month: 'October',
-                        year: 2025,
-                        firstDayOfMonth: 3, // Placeholder
-                        daysInMonth: 31,
-                    },
+                    stayId: data.stay._id,
                     cancellationPolicy: data.stay.cancellation_policy,
                     checkInTime: data.stay.checkin_time,
                     checkOutTime: data.stay.checkout_time,
@@ -203,6 +249,7 @@ function RoomDetail() {
                         latitude: 12.9716, // Placeholder as API doesn't provide
                         longitude: 77.5946, // Placeholder for Bengaluru
                         mapImage: data.stay.city_id.image.url,
+                        locationUrl: data.stay.locationUrl,
                         rating: '4.5', // Placeholder
                         ratingDescription: 'Great',
                         distanceFromCenter: '500 meters', // Placeholder
@@ -215,6 +262,7 @@ function RoomDetail() {
                 };
                 setRoomData(transformedData);
                 setSelectedRoomType(transformedData.roomTypes[0]); // Set default room type
+                setDisplayPrice(transformedData.roomTypes[0].price); // Set initial display price
                 setLoading(false);
             } catch (err) {
                 setError(err.message);
@@ -222,28 +270,87 @@ function RoomDetail() {
             }
         };
         fetchRoomData();
-    }, []);
+    }, [stayId]);
 
     // Update total price based on selected room type and dates
     useEffect(() => {
         if (roomData && selectedRoomType) {
+            if (selectedDates.length === 0) {
+                setTotalPrice(0);
+                setDisplayPrice(selectedRoomType.price);
+                return;
+            }
+
+            // Create availability map for quick lookup
+            const availabilityMap = {};
+            if (selectedRoomType.availability && Array.isArray(selectedRoomType.availability)) {
+                selectedRoomType.availability.forEach(avail => {
+                    const date = new Date(avail.date);
+                    const dateKey = date.toISOString().split('T')[0];
+                    availabilityMap[dateKey] = avail.price || avail.price_per_night || selectedRoomType.price;
+                });
+            }
+
+            // Calculate total based on actual prices for each night
+            let total = 0;
+            let priceSum = 0;
             const nights = selectedDates.length > 1 ? selectedDates.length - 1 : 0;
-            setTotalPrice(nights * selectedRoomType.price);
+            
+            // For each night between check-in and check-out, add the price
+            for (let i = 0; i < nights; i++) {
+                const nightDate = selectedDates[i];
+                const nightPrice = availabilityMap[nightDate] || selectedRoomType.price;
+                total += nightPrice;
+                priceSum += nightPrice;
+            }
+            
+            setTotalPrice(total);
+            // Set display price as average of selected dates
+            setDisplayPrice(nights > 0 ? Math.round(priceSum / nights) : selectedRoomType.price);
         }
     }, [selectedDates, selectedRoomType, roomData]);
 
-    const handleDateSelect = (day) => {
-        if (selectedDates.length === 0 || selectedDates.length === 2) {
-            setSelectedDates([day]);
+    const handleDateSelect = (dateString) => {
+        const selectedDate = new Date(dateString);
+        
+        if (selectedDates.length === 0 || selectedDates.length >= 2) {
+            // Start new selection
+            setSelectedDates([dateString]);
         } else if (selectedDates.length === 1) {
-            const startDate = selectedDates[0];
-            const endDate = day;
-            if (startDate < endDate) {
-                const range = Array.from({ length: endDate - startDate + 1 }, (_, i) => startDate + i);
+            const startDate = new Date(selectedDates[0]);
+            if (selectedDate > startDate) {
+                // Create range from start to end
+                const range = [selectedDates[0]];
+                const current = new Date(startDate);
+                current.setDate(current.getDate() + 1);
+                
+                while (current <= selectedDate) {
+                    range.push(current.toISOString().split('T')[0]);
+                    current.setDate(current.getDate() + 1);
+                }
                 setSelectedDates(range);
             } else {
-                setSelectedDates([day]);
+                // New start date
+                setSelectedDates([dateString]);
             }
+        }
+    };
+
+    const handlePrevMonth = () => {
+        if (currentMonth === 0) {
+            setCurrentMonth(11);
+            setCurrentYear(currentYear - 1);
+        } else {
+            setCurrentMonth(currentMonth - 1);
+        }
+    };
+
+    const handleNextMonth = () => {
+        if (currentMonth === 11) {
+            setCurrentMonth(0);
+            setCurrentYear(currentYear + 1);
+        } else {
+            setCurrentMonth(currentMonth + 1);
         }
     };
 
@@ -255,16 +362,27 @@ function RoomDetail() {
 
     const renderCalendar = () => {
         if (!roomData || !selectedRoomType) return null;
-        const { firstDayOfMonth, daysInMonth } = roomData.availability;
+        
+        // Calculate first day and number of days in current month
+        const firstDayOfMonth = new Date(currentYear, currentMonth, 1).getDay();
+        const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+        
         const blanks = Array.from({ length: firstDayOfMonth });
         const days = Array.from({ length: daysInMonth }, (_, i) => i + 1);
 
-        // Check availability from API for the selected room type
-        const bookedDates = selectedRoomType.availability
-            ? selectedRoomType.availability
-                .filter(a => new Date(a.date).getMonth() === 9 && new Date(a.date).getFullYear() === 2025)
-                .map(a => new Date(a.date).getDate())
-            : [];
+        // Create a map of availability from backend for quick lookup
+        const availabilityMap = {};
+        if (selectedRoomType.availability && Array.isArray(selectedRoomType.availability)) {
+            selectedRoomType.availability.forEach(avail => {
+                const date = new Date(avail.date);
+                const dateKey = date.toISOString().split('T')[0];
+                availabilityMap[dateKey] = {
+                    available: avail.available_rooms > 0,
+                    rooms: avail.available_rooms,
+                    price: avail.price || avail.price_per_night || selectedRoomType.price
+                };
+            });
+        }
 
         return (
             <div className="grid grid-cols-7 gap-2 text-center text-sm">
@@ -273,19 +391,35 @@ function RoomDetail() {
                 ))}
                 {blanks.map((_, i) => <div key={`blank-${i}`}></div>)}
                 {days.map(day => {
-                    const isSelected = selectedDates.includes(day);
-                    const isBooked = bookedDates.includes(day) && selectedRoomType.availability?.find(a => new Date(a.date).getDate() === day)?.available_rooms === 0;
+                    const dateObj = new Date(currentYear, currentMonth, day);
+                    dateObj.setHours(0, 0, 0, 0);
+                    const dateString = dateObj.toISOString().split('T')[0];
+                    
+                    const isPast = dateObj < today;
+                    const isSelected = selectedDates.includes(dateString);
+                    const availInfo = availabilityMap[dateString];
+                    const isAvailable = availInfo ? availInfo.available : true; // Default to available if not in backend
+                    const displayPrice = availInfo ? availInfo.price : selectedRoomType.price;
+                    
+                    const isDisabled = isPast || !isAvailable;
+                    
                     return (
                         <div
                             key={day}
-                            className={`p-2 border rounded-lg cursor-pointer transition-colors
-                            ${isBooked ? 'bg-gray-200 text-gray-400 line-through cursor-not-allowed' : 'hover:bg-blue-100'}
-                            ${isSelected && !isBooked ? 'bg-blue-600 text-white' : ''}
+                            className={`p-2 border rounded-lg transition-colors
+                            ${isDisabled 
+                                ? 'bg-gray-200 text-gray-400 cursor-not-allowed' 
+                                : 'cursor-pointer hover:bg-blue-100'}
+                            ${isSelected && !isDisabled ? 'bg-blue-600 text-white hover:bg-blue-700' : ''}
                         `}
-                            onClick={() => !isBooked && handleDateSelect(day)}
+                            onClick={() => !isDisabled && handleDateSelect(dateString)}
+                            title={isPast ? 'Past date' : !isAvailable ? 'Not available' : 'Click to select'}
                         >
-                            <p className="font-semibold">{day}</p>
-                            <p className="text-xs">₹{selectedRoomType.price}</p>
+                            <p className={`font-semibold ${isDisabled ? 'line-through' : ''}`}>{day}</p>
+                            <p className="text-xs">₹{displayPrice}</p>
+                            {availInfo && availInfo.rooms > 0 && availInfo.rooms <= 2 && (
+                                <p className="text-xs text-red-500">{availInfo.rooms} left</p>
+                            )}
                         </div>
                     );
                 })}
@@ -299,22 +433,27 @@ function RoomDetail() {
             return;
         }
 
+        const checkInDate = new Date(selectedDates[0]);
+        const checkOutDate = new Date(selectedDates[selectedDates.length - 1]);
+        
+        const monthNames = ["January", "February", "March", "April", "May", "June",
+            "July", "August", "September", "October", "November", "December"
+        ];
+
         const bookingData = {
-            stayId: roomData._id || '68fc67015d9b644fc91ed910',
+            stayId: roomData.stayId || stayId,
             roomTypeId: selectedRoomType.id,
             roomType: selectedRoomType.name,
             guests: guestCount,
             dates: {
-                checkIn: new Date(2025, 9, selectedDates[0]).toISOString(),
-                checkOut: new Date(2025, 9, selectedDates[selectedDates.length - 1]).toISOString(),
-                startDisplay: `October ${selectedDates[0]}, 2025`,
-                endDisplay: `October ${selectedDates[selectedDates.length - 1]}, 2025`,
+                checkIn: checkInDate.toISOString(),
+                checkOut: checkOutDate.toISOString(),
+                startDisplay: `${monthNames[checkInDate.getMonth()]} ${checkInDate.getDate()}, ${checkInDate.getFullYear()}`,
+                endDisplay: `${monthNames[checkOutDate.getMonth()]} ${checkOutDate.getDate()}, ${checkOutDate.getFullYear()}`,
             },
-            totalPrice: totalPrice + 70, // Including fees
+            totalPrice: totalPrice,
             priceBreakdown: {
                 basePrice: totalPrice,
-                cleaningFee: 50,
-                serviceFee: 20,
             },
             selectedRoom: {
                 image: selectedRoomType.image,
@@ -345,16 +484,7 @@ function RoomDetail() {
 
     return (
         <div className="bg-gray-50 font-sans">
-            <header className="bg-white shadow-sm p-4 sticky top-0 z-10">
-                <div className="container mx-auto flex justify-between items-center">
-                    <h1 className="text-2xl font-bold text-red-600">Tripeoo</h1>
-                    <nav>
-                        <a href="#" className="text-gray-700 hover:text-red-600">User Profile</a>
-                    </nav>
-                </div>
-            </header>
-
-            <main className="container mx-auto p-4 grid grid-cols-1 lg:grid-cols-3 gap-8 mt-4">
+            <main className="container mx-auto p-4 grid grid-cols-1 lg:grid-cols-3 gap-8 mt-8">
                 <div className="lg:col-span-2 space-y-8">
                     <section>
                         <ImageGallery images={roomData.images} />
@@ -395,6 +525,9 @@ function RoomDetail() {
                                 onChange={(e) => {
                                     const selected = roomData.roomTypes.find(rt => rt.id === e.target.value);
                                     setSelectedRoomType(selected);
+                                    setDisplayPrice(selected.price); // Reset display price to new room's base price
+                                    setSelectedDates([]); // Clear selected dates when changing room
+                                    setTotalPrice(0); // Reset total price
                                 }}
                             >
                                 {roomData.roomTypes.map(rt => (
@@ -427,11 +560,23 @@ function RoomDetail() {
 
                     <section className="border-b pb-6">
                         <h3 className="text-2xl font-bold text-gray-900 mb-2">Availability</h3>
-                        <p className="text-gray-600 mb-4">Prices may increase on weekends or holidays</p>
+                        <p className="text-gray-600 mb-4">Prices may increase on weekends or holidays. Past dates and unavailable dates are disabled.</p>
                         <div className="flex justify-between items-center mb-4">
-                            <button className="text-gray-500 p-2 rounded-full hover:bg-gray-200">&lt;</button>
-                            <h4 className="text-lg font-semibold">{roomData.availability.month} {roomData.availability.year}</h4>
-                            <button className="text-gray-500 p-2 rounded-full hover:bg-gray-200">&gt;</button>
+                            <button 
+                                onClick={handlePrevMonth}
+                                className="text-gray-500 p-2 rounded-full hover:bg-gray-200 transition-colors"
+                            >
+                                &lt;
+                            </button>
+                            <h4 className="text-lg font-semibold">
+                                {new Date(currentYear, currentMonth).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+                            </h4>
+                            <button 
+                                onClick={handleNextMonth}
+                                className="text-gray-500 p-2 rounded-full hover:bg-gray-200 transition-colors"
+                            >
+                                &gt;
+                            </button>
                         </div>
                         {renderCalendar()}
                     </section>
@@ -491,7 +636,7 @@ function RoomDetail() {
                 <aside className="lg:col-span-1">
                     <div className="bg-white p-6 rounded-lg shadow-lg sticky top-24">
                         <div className="flex items-baseline mb-4">
-                            <p className="text-3xl font-bold text-gray-900">₹{selectedRoomType.price}</p>
+                            <p className="text-3xl font-bold text-gray-900">₹{displayPrice}</p>
                             <span className="text-gray-600 ml-1">/night</span>
                         </div>
 
@@ -499,20 +644,43 @@ function RoomDetail() {
                             <div className="flex justify-between items-center mb-2">
                                 <div>
                                     <label className="block text-xs font-bold text-gray-700">CHECK-IN</label>
-                                    <p>{selectedDates.length > 0 ? `Oct ${selectedDates[0]}, 2025` : 'Add date'}</p>
+                                    <p>{selectedDates.length > 0 
+                                        ? new Date(selectedDates[0]).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+                                        : 'Add date'
+                                    }</p>
                                 </div>
                                 <div className="border-r h-8"></div>
                                 <div>
                                     <label className="block text-xs font-bold text-gray-700">CHECKOUT</label>
-                                    <p>{selectedDates.length > 1 ? `Oct ${selectedDates[selectedDates.length - 1]}, 2025` : 'Add date'}</p>
+                                    <p>{selectedDates.length > 1 
+                                        ? new Date(selectedDates[selectedDates.length - 1]).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+                                        : 'Add date'
+                                    }</p>
                                 </div>
                             </div>
                             <div className="border-t pt-2">
                                 <label htmlFor="guests" className="block text-xs font-bold text-gray-700">GUESTS & ROOMS</label>
-                                <select id="guests" className="w-full border-none p-0 focus:ring-0">
-                                    <option>{selectedRoomType.max_adults} Adults, 1 Room</option>
-                                    <option>{selectedRoomType.max_adults - 1} Adult, 1 Room</option>
-                                    <option>{selectedRoomType.max_adults + 1} Adults, 2 Rooms</option>
+                                <select 
+                                    id="guests" 
+                                    className="w-full border-none p-0 focus:ring-0"
+                                    onChange={(e) => {
+                                        const [adults, children] = e.target.value.split('-').map(Number);
+                                        setGuestCount({ adults, children, rooms: 1 });
+                                    }}
+                                >
+                                    <option value={`${selectedRoomType.max_adults}-0`}>
+                                        {selectedRoomType.max_adults} Adult{selectedRoomType.max_adults > 1 ? 's' : ''}, 0 Children
+                                    </option>
+                                    {selectedRoomType.max_children > 0 && (
+                                        <option value={`${selectedRoomType.max_adults}-${selectedRoomType.max_children}`}>
+                                            {selectedRoomType.max_adults} Adult{selectedRoomType.max_adults > 1 ? 's' : ''}, {selectedRoomType.max_children} Child{selectedRoomType.max_children > 1 ? 'ren' : ''}
+                                        </option>
+                                    )}
+                                    {selectedRoomType.max_adults > 1 && (
+                                        <option value={`${selectedRoomType.max_adults - 1}-0`}>
+                                            {selectedRoomType.max_adults - 1} Adult{selectedRoomType.max_adults - 1 > 1 ? 's' : ''}, 0 Children
+                                        </option>
+                                    )}
                                 </select>
                             </div>
                         </div>
@@ -525,22 +693,14 @@ function RoomDetail() {
 
                         <div className="space-y-2 text-gray-700">
                             <p className="flex justify-between">
-                                <span>₹{selectedRoomType.price} x {selectedDates.length > 1 ? selectedDates.length - 1 : 0} nights</span>
+                                <span>₹{displayPrice} x {selectedDates.length > 1 ? selectedDates.length - 1 : 0} nights</span>
                                 <span>₹{totalPrice}</span>
-                            </p>
-                            <p className="flex justify-between">
-                                <span>Cleaning fee</span>
-                                <span>₹50</span>
-                            </p>
-                            <p className="flex justify-between">
-                                <span>Service fee</span>
-                                <span>₹20</span>
                             </p>
                         </div>
 
                         <div className="border-t mt-4 pt-4 flex justify-between font-bold text-lg">
                             <span>Total</span>
-                            <span>₹{totalPrice > 0 ? totalPrice + 50 + 20 : 0}</span>
+                            <span>₹{totalPrice}</span>
                         </div>
                     </div>
                 </aside>

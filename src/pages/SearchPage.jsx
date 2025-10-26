@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import {
     FiSearch,
     FiMapPin,
@@ -22,6 +23,7 @@ import {
 import { apiHandler } from "../utils/api"; // Adjust the import path to your api.js file
 
 function SearchPage() {
+    const navigate = useNavigate();
     const [searchData, setSearchData] = useState({
         location: "",
         stayType: "All Types"
@@ -207,7 +209,13 @@ function SearchPage() {
     };
 
     const handleBookNowClick = (property) => {
-        window.location.href = `room-detail?id=${property.id}`;
+        console.log('Navigating to room detail with property:', property);
+        console.log('Property ID:', property.id);
+        if (!property.id) {
+            console.error('Property ID is missing!');
+            return;
+        }
+        navigate(`/room-detail/${property.id}`);
     };
 
     // Filter and sort results

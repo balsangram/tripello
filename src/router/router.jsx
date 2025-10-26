@@ -25,21 +25,19 @@ const AppRouter = () => {
                     <Route path="login" element={<Login />} />
                     <Route path="signup" element={<Register />} />
                     <Route path="search" element={<Search />} />
-                    <Route path="ConfirmBooking" element={<ConfirmBooking />} />
 
                     {/* Protected Routes */}
                     <Route
-                        path="room-detail"
+                        path="room-detail/:stayId"
                         element={
                             <ProtectedRoute>
                                 <RoomDetail />
-                                <ConfirmBooking />
                             </ProtectedRoute>
                         }
                     />
 
                     <Route path="profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
-                    <Route path="confirm-booking" element={<ProtectedRoute><ConfirmBooking /></ProtectedRoute>} />
+                    <Route path="ConfirmBooking" element={<ProtectedRoute><ConfirmBooking /></ProtectedRoute>} />
                     <Route path="chat-with-us" element={<ProtectedRoute><ChatWithUs /></ProtectedRoute>} />
                 </Route>
             </Routes>
