@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef } from "react";
-import { FiBell, FiChevronDown, FiLogOut, FiUser, FiHeart, FiMessageSquare, FiSettings } from "react-icons/fi";
+import { FiBell, FiChevronDown, FiLogOut, FiUser, FiHeart, FiMessageSquare, FiSettings, FiShare } from "react-icons/fi";
 import { Link } from "react-router-dom";
 import ProfilePlaceholder from "../assets/profile/profiel.png";
 import logo from "/logo.png";
+import { TiSocialInstagramCircular } from "react-icons/ti";
 
 function Header({ isLoggedIn, onLogout, user }) {
     const [showNotifications, setShowNotifications] = useState(false);
@@ -43,7 +44,7 @@ function Header({ isLoggedIn, onLogout, user }) {
                 {/* Logo */}
                 <Link to="/" className="flex items-center gap-3">
                     <img src={logo} alt="Tripeloo" className="h-12 w-auto object-contain" />
-                    {!isScrolled && <span className="text-white font-bold text-xl">Tripeloo</span>}
+                    {/* {!isScrolled && <span className="text-white font-bold text-xl">Tripeloo</span>} */}
                 </Link>
 
                 {/* Right Side */}
@@ -61,6 +62,11 @@ function Header({ isLoggedIn, onLogout, user }) {
                                     )}
                                 </button>
                             </div>
+
+                            {/* Social Media Button */}
+                            <Link to="/post" className="p-2 rounded-full bg-white/20 text-white hover:bg-white/30 transition-colors">
+                                <TiSocialInstagramCircular className="text-xl" />
+                            </Link>
 
                             {/* Profile Menu */}
                             <div className="relative" ref={profileRef}>
@@ -82,7 +88,7 @@ function Header({ isLoggedIn, onLogout, user }) {
 
                                         <Link to="/profile" className="block px-3 py-2 rounded hover:bg-gray-100 flex items-center gap-2"><FiUser /> My Profile</Link>
                                         <Link to="/wishlist" className="block px-3 py-2 rounded hover:bg-gray-100 flex items-center gap-2"><FiHeart /> Wishlist</Link>
-                                        <Link to="/messages" className="block px-3 py-2 rounded hover:bg-gray-100 flex items-center gap-2"><FiMessageSquare /> Messages</Link>
+                                        <Link to="/chat-with-us" className="block px-3 py-2 rounded hover:bg-gray-100 flex items-center gap-2"><FiMessageSquare /> Messages</Link>
                                         <Link to="/settings" className="block px-3 py-2 rounded hover:bg-gray-100 flex items-center gap-2"><FiSettings /> Settings</Link>
                                         <button onClick={onLogout} className="w-full text-left px-3 py-2 rounded hover:bg-red-50 text-red-600 flex items-center gap-2">
                                             <FiLogOut /> Logout
