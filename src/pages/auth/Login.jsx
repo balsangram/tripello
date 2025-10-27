@@ -1,3 +1,5 @@
+
+
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { apiHandler } from "../../utils/api"; // adjust if your api.js is in another folder
@@ -24,8 +26,8 @@ function Login() {
       // ✅ Store user data and token in localStorage
       localStorage.setItem("userData", JSON.stringify(res));
 
-      // ✅ Redirect to dashboard or home
-      navigate("/");
+      // ✅ Reload and redirect to dashboard or home
+      window.location.href = "/";
     } catch (error) {
       alert(error?.message || "Login failed! Please check your credentials.");
     } finally {

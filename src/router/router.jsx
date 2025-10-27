@@ -11,6 +11,7 @@ import { AuthContext } from "../layouts/AuthContext";
 import RoomDetail from "../pages/RoomDetail";
 import ConfirmBooking from "../pages/ComfirmBooking";
 import ChatWithUs from "../pages/ChartWithUs";
+import Social from "../pages/Social";
 
 const AppRouter = () => {
     const { isLoggedIn } = useContext(AuthContext);
@@ -39,6 +40,7 @@ const AppRouter = () => {
                     <Route path="profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
                     <Route path="ConfirmBooking" element={<ProtectedRoute><ConfirmBooking /></ProtectedRoute>} />
                     <Route path="chat-with-us" element={<ProtectedRoute><ChatWithUs /></ProtectedRoute>} />
+                    <Route path="/post" element={<ProtectedRoute><Social /></ProtectedRoute>} />
                 </Route>
             </Routes>
         </BrowserRouter>
